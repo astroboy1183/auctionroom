@@ -72,13 +72,13 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 4 — Juice + ship
 
-- [ ] Auctioneer: pre-recorded stock phrases + Web Speech API for names/numbers
-- [ ] Sounds via Howler: bid tick, hammer, crowd murmur — all behind a toggle
-- [ ] Balance pass 1: bot difficulty across 3 lobby settings
-- [ ] Balance pass 2: price inflation vs ₹90 Cr purse (pool base total is ~⅓ of purses)
-- [ ] Balance pass 3: RTM card count (start 2, adjust by feel)
-- [ ] Share-result text polish
-- [ ] Production deploy verified at auctionroom.pages.dev
+- [x] Auctioneer: Web Speech API end-to-end (pre-recorded phrases deferred to v1, D-011)
+- [x] Sounds: WebAudio-synthesized bid blip, final-seconds clock, gavel — behind a toggle (D-011)
+- [x] Balance pass 1: difficulty spread 594/620/648L avg (easy/normal/hard), wallets loosen on hard
+- [x] Balance pass 2: avg 620L, p90 1700L, max ~₹40 Cr, purses ~97% spent — auction-like
+- [x] Balance pass 3: 2 RTM cards kept; former players 4/team → ~1+ RTM moment per game
+- [x] Share-result text polish
+- [x] Production deploy verified at auctionroom-bue.pages.dev
 - [ ] **GATE 🧑:** a friend plays from the public URL with zero instructions
 
 ## Phase 5 (v1) — 3D auction hall

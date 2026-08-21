@@ -5,6 +5,18 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-011 — All sound is synthesized: WebAudio SFX + pure-TTS auctioneer
+**Phase 4, 2026-08-21.** The spec named Howler.js and pre-recorded auctioneer
+phrases; v0 ships with neither. Bid blips, the final-seconds clock, and the
+gavel are synthesized with the WebAudio API (~60 lines, zero assets, zero
+network), and the auctioneer is Web Speech API end-to-end — player names,
+prices, "going once", "sold!". Preferring an `en-IN` voice when the OS has one.
+**Why:** no audio assets keeps the static build tiny and the pipeline simple;
+browser TTS quality is good enough for v0 and the toggle mutes it entirely.
+**Deferred to v1:** pre-recorded stock phrases (per D-007) once there's an
+asset pipeline for the 3D hall anyway. Howler stays out unless real audio
+files arrive.
+
 ## D-010 — Pages deploys via wrangler direct upload, not dashboard Git-connect
 **Phase 0, 2026-08-21.** The machine already had a logged-in wrangler OAuth
 session, so the project was created and deployed entirely from the CLI —

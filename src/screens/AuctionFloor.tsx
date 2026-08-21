@@ -5,6 +5,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { useAuctionDriver } from "../hooks/useAuctionDriver";
+import { useSoundEffects } from "../hooks/useSoundEffects";
+import { hushAuctioneer } from "../lib/audio";
 import { canBid } from "../engine/rules";
 import { nextBidAmount } from "../engine/bids";
 import { ACCEL_SECONDS, LOT_SECONDS } from "../engine/auction";
@@ -19,9 +21,12 @@ import { money } from "../components/format";
 
 export default function AuctionFloor() {
   useAuctionDriver();
+  useSoundEffects();
   const auction = useGameStore((s) => s.auction);
   const humanId = useGameStore((s) => s.humanId);
   const dispatch = useGameStore((s) => s.dispatch);
+  const soundOn = useGameStore((s) => s.soundOn);
+  const toggleSound = useGameStore((s) => s.toggleSound);
   const [squadOpen, setSquadOpen] = useState(false);
 
   const player = auction.currentPlayer;
@@ -63,7 +68,16 @@ export default function AuctionFloor() {
             <motion.span key={set?.id ?? "accel"} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
               {auction.accelerated ? "⚡ Accelerated Round" : `Set ${set?.order} — ${set?.name}`}
             </motion.span>
-            <span>{remaining} to go</span>
+            <span className="flex items-center gap-3">
+              {remaining} to go
+              <button
+                onClick={() => { if (soundOn) hushAuctioneer(); toggleSound(); }}
+                title={soundOn ? "mute" : "unmute"}
+                className="rounded px-1 text-base leading-none hover:bg-slate-800"
+              >
+                {soundOn ? "🔊" : "🔇"}
+              </button>
+            </span>
           </div>
 
           <div className="mt-3">

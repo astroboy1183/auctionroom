@@ -149,10 +149,13 @@ export function attachBotPersonalities(
 ): Franchise[] {
   const [tagIdx] = nextInt(seed >>> 0, SCOUT_TAGS.length);
   const clamp = (x: number) => Math.min(1, Math.max(0, x));
+  // Difficulty pushes aggression up AND discipline down — harder bots bid
+  // more often, hold higher ceilings, and untie their wallets.
+  const loosen = (d: number) => clamp(d - (difficulty - 1) * 0.4);
   const personalities = [
-    { name: "The Shark", aggression: clamp(0.9 * difficulty), patience: 0.15, budgetDiscipline: 0.25 },
-    { name: "The Accountant", aggression: clamp(0.15 * difficulty), patience: 0.85, budgetDiscipline: 0.95 },
-    { name: "The Scout", aggression: clamp(0.5 * difficulty), patience: 0.5, budgetDiscipline: 0.5,
+    { name: "The Shark", aggression: clamp(0.9 * difficulty), patience: 0.15, budgetDiscipline: loosen(0.25) },
+    { name: "The Accountant", aggression: clamp(0.15 * difficulty), patience: 0.85, budgetDiscipline: loosen(0.95) },
+    { name: "The Scout", aggression: clamp(0.5 * difficulty), patience: 0.5, budgetDiscipline: loosen(0.5),
       tagObsession: SCOUT_TAGS[tagIdx] },
   ];
   let i = 0;

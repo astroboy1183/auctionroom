@@ -13,7 +13,7 @@ import playersJson from "../data/players.json";
 const players = playersJson as Player[];
 
 export type Difficulty = "easy" | "normal" | "hard";
-const DIFFICULTY_MULT: Record<Difficulty, number> = { easy: 0.8, normal: 1.0, hard: 1.2 };
+const DIFFICULTY_MULT: Record<Difficulty, number> = { easy: 0.7, normal: 1.0, hard: 1.3 };
 
 interface GameStore {
   auction: AuctionState;
