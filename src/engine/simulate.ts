@@ -103,3 +103,80 @@ export function simulateRandomAuction(players: Player[], seed: number): SimResul
   if (state.phase !== "finished") throw new Error("simulation did not finish");
   return { state, log, events };
 }
+
+// ---------------------------------------------------------------- bot sims
+
+import { attachBotPersonalities, botAction, botRtmMatch, botRtmRaise, botRtmUseCard } from "./bots";
+import { shuffle } from "./rng";
+
+/**
+ * Full bots-only auction with the three shipped personalities (the human
+ * seat also runs as a bot here — a fourth Shark-ish default). Used by the
+ * Phase 2 gate, balance passes, and the 1000-auction validity sweep.
+ */
+export function simulateBotAuction(players: Player[], seed: number, difficulty = 1): SimResult {
+  let rng: Rng = seedRng(seed ^ 0xb07);
+  let franchises = assignFormerPlayers(makeDefaultFranchises(), players, seed + 1);
+  // Every seat botted: the "human" franchise gets its own balanced personality.
+  franchises = attachBotPersonalities(
+    franchises.map((f) => ({ ...f, isHuman: false })),
+    difficulty,
+    seed + 2,
+  );
+  let state = applyEvent(createInitialState(players, franchises), { type: "START", seed });
+  const log: string[] = [];
+  const name = (id: string | null) => franchises.find((f) => f.id === id)?.name ?? "?";
+  let events = 1;
+
+  while (state.phase !== "finished" && events < MAX_EVENTS) {
+    events++;
+    switch (state.phase) {
+      case "bidding": {
+        // Seeded turn order per tick, one bid max — then the clock moves.
+        let order: typeof state.franchises;
+        [order, rng] = shuffle(state.franchises, rng);
+        let acted = false;
+        for (const f of order) {
+          let move;
+          [move, rng] = botAction(state, f.id, rng);
+          if (move === "bid") {
+            state = applyEvent(state, { type: "BID", franchiseId: f.id });
+            acted = true;
+            break;
+          }
+          if (move === "pass") state = applyEvent(state, { type: "PASS", franchiseId: f.id });
+          if (state.phase !== "bidding") { acted = true; break; } // pass closed the lot
+        }
+        if (!acted && state.phase === "bidding") state = applyEvent(state, { type: "TICK" });
+        break;
+      }
+      case "rtm": {
+        const stage = state.rtmOffer!.stage;
+        let v: boolean;
+        if (stage === "offer") {
+          [v, rng] = botRtmUseCard(state, rng);
+          state = applyEvent(state, { type: "RTM_OFFER_RESPONSE", useCard: v });
+        } else if (stage === "raise") {
+          [v, rng] = botRtmRaise(state, rng);
+          state = applyEvent(state, { type: "RTM_RAISE", raise: v });
+        } else {
+          [v, rng] = botRtmMatch(state, rng);
+          state = applyEvent(state, { type: "RTM_DECIDE", match: v });
+        }
+        break;
+      }
+      case "sold":
+        log.push(`SOLD  ${state.currentPlayer!.name} → ${name(state.currentBidderId)} for ${state.currentBid}L`);
+        state = applyEvent(state, { type: "NEXT_PLAYER" });
+        break;
+      case "unsold":
+        log.push(`UNSOLD  ${state.currentPlayer!.name}`);
+        state = applyEvent(state, { type: "NEXT_PLAYER" });
+        break;
+      default:
+        throw new Error(`bot simulation stuck in phase ${state.phase}`);
+    }
+  }
+  if (state.phase !== "finished") throw new Error("bot simulation did not finish");
+  return { state, log, events };
+}

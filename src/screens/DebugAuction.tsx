@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import playersJson from "../data/players.json";
-import { simulateRandomAuction, type SimResult } from "../engine/simulate";
+import { simulateBotAuction, simulateRandomAuction, type SimResult } from "../engine/simulate";
 import { finalScores } from "../engine/scoring";
 import { START_BUDGET } from "../engine/franchises";
 import { overseasCount } from "../engine/rules";
@@ -13,9 +13,11 @@ const players = playersJson as Player[];
 
 export default function DebugAuction() {
   const [seed, setSeed] = useState(42);
+  const [bots, setBots] = useState(true);
   const [result, setResult] = useState<SimResult | null>(null);
 
-  const run = () => setResult(simulateRandomAuction(players, seed));
+  const run = () =>
+    setResult(bots ? simulateBotAuction(players, seed) : simulateRandomAuction(players, seed));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-8">
@@ -29,6 +31,10 @@ export default function DebugAuction() {
             onChange={(e) => setSeed(Number(e.target.value))}
             className="w-28 rounded bg-slate-800 px-2 py-1 font-mono"
           />
+          <label className="flex items-center gap-1.5 text-sm text-slate-400">
+            <input type="checkbox" checked={bots} onChange={(e) => setBots(e.target.checked)} />
+            personalities
+          </label>
           <button
             onClick={run}
             className="rounded bg-amber-500 px-4 py-1.5 font-bold text-slate-950 hover:bg-amber-400"

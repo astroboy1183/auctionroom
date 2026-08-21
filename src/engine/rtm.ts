@@ -8,7 +8,7 @@ import { canTakeAt, remainingPool } from "./rules";
 import { seedRng, shuffle, type Rng } from "./rng";
 
 export const RTM_CARDS_START = 2;
-export const FORMER_PLAYERS_PER_FRANCHISE = 3;
+export const FORMER_PLAYERS_PER_FRANCHISE = 4; // ~1+ RTM moment per game
 
 /**
  * Which franchise (if any) gets the RTM offer for this sale?

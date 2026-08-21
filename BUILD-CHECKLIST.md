@@ -42,18 +42,18 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 2 — Bots
 
-- [ ] `valueEstimate(player, franchise)` — rating, role scarcity in remaining pool,
+- [x] `valueEstimate(player, franchise)` — rating, role scarcity in remaining pool,
       unfilled needs, budget pressure
-- [ ] Personality modifiers: aggression, obsessions (+20% role / +15% tag), discipline
-- [ ] Hesitation gate (patience-driven, seeded)
-- [ ] Reaction delays: jittered by patience (~1s Shark … ~7s Accountant), seeded
-- [ ] Bot RTM decisions
-- [ ] The Shark / The Accountant / The Scout (random obsession per game, seeded)
-- [ ] Difficulty = aggression multiplier from lobby
-- [ ] Test: The Accountant never exceeds its value estimate
-- [ ] Test: no bot ever soft-locks
-- [ ] Test: 1000 seeded auctions → all squads valid, no errors
-- [ ] **GATE 🧑:** bots-only auction in debug page "feels like an auction"
+- [x] Personality modifiers: aggression, obsessions (+20% role / +15% tag), discipline
+- [x] Hesitation gate (patience-driven, seeded)
+- [x] Reaction delays: jittered by patience (~1s Shark … ~7s Accountant), seeded
+- [x] Bot RTM decisions
+- [x] The Shark / The Accountant / The Scout (random obsession per game, seeded)
+- [x] Difficulty = aggression multiplier from lobby
+- [x] Test: The Accountant never exceeds its value estimate
+- [x] Test: no bot ever soft-locks
+- [x] Test: 1000 seeded auctions → all squads valid, no errors
+- [x] **GATE 🧑:** bots-only auction in debug page "feels like an auction"
 
 ## Phase 3 — Real UI
 
