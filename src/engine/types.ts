@@ -15,7 +15,7 @@ export interface Player {
 }
 
 export interface AuctionSet {
-  id: string;             // "S1".."S10"
+  id: string;             // "S1".."S12"
   name: string;           // "Marquee", "Batters I", ...
   order: number;          // fixed auction order; shuffle happens within a set
 }
@@ -32,7 +32,7 @@ export interface BotPersonality {
 export interface Franchise {
   id: string;
   name: string;             // fictional: "Hyderabad Hawks", never real IPL names
-  color: string;            // tailwind-friendly hex, used by the UI only
+  color: string;            // hex, used by the UI only
   budget: number;           // starts at 9000 (₹90 Cr, in lakhs)
   squad: Player[];
   isHuman: boolean;
@@ -47,12 +47,16 @@ export interface Bid {
   playerId: string;
 }
 
+// RTM flow: offer → (optional winner raise) → decide. CLAUDE.md §7.
+export type RtmStage = "offer" | "raise" | "decide";
+
 export interface RtmOffer {
   playerId: string;
   formerFranchiseId: string;  // holder of the RTM right
   winningFranchiseId: string; // won the open bidding
   amount: number;             // current number to match
   raiseUsed: boolean;         // winner's single post-RTM raise spent?
+  stage: RtmStage;
 }
 
 export type Phase =
@@ -67,25 +71,27 @@ export interface AuctionState {
   phase: Phase;
   sets: AuctionSet[];         // ordered; pool is derived from these
   pool: Player[];             // full auction order (seeded shuffle within sets)
-  poolIndex: number;          // next player to come up
+  poolIndex: number;          // index of the player currently on the block
   currentPlayer: Player | null;
   currentBid: number | null;
   currentBidderId: string | null;
   bidHistory: Bid[];
   franchises: Franchise[];
-  timer: number;              // seconds left on current lot (10, resets on bid)
+  timer: number;              // seconds left on current lot (resets on bid)
+  passed: string[];           // franchises out of the current lot (bid clears)
+  unsold: Player[];           // went unsold (accelerated round may re-list)
   rtmOffer: RtmOffer | null;  // set when phase === "rtm"
-  accelerated: boolean;       // in the post-Set-10 accelerated round (6s timer)
+  accelerated: boolean;       // in the post-final-set accelerated round (6s)
   rngSeed: number;            // engine never calls Math.random — CLAUDE.md §4
 }
 
-// Events consumed by the reducer in auction.ts (Phase 1).
+// Events consumed by applyEvent in auction.ts. TICK performs resolution when
+// the clock runs out; there is no separate RESOLVE event.
 export type AuctionEvent =
   | { type: "START"; seed: number }
   | { type: "BID"; franchiseId: string }
   | { type: "PASS"; franchiseId: string }
   | { type: "TICK" }                                  // 1 second elapsed
-  | { type: "RESOLVE" }                               // timer hit 0 → sold/unsold/rtm
   | { type: "RTM_OFFER_RESPONSE"; useCard: boolean }  // former franchise
   | { type: "RTM_RAISE"; raise: boolean }             // original winner, once
   | { type: "RTM_DECIDE"; match: boolean }            // former franchise, final

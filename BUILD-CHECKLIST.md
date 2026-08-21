@@ -21,24 +21,24 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 1 — Engine (pure TS, no UI polish)
 
-- [ ] `rng.ts` — mulberry32 seeded PRNG (engine never calls Math.random)
-- [ ] `sets.ts` — 12 fixed sets, seeded within-set shuffle, set transitions
-- [ ] `bids.ts` — increment ladder (<100→+10, 100–500→+25, >500→+50), bid validation
-- [ ] `rules.ts` — squad caps (15 / 6 overseas), role minimums, reserve/soft-lock math
-- [ ] `auction.ts` — `applyEvent` reducer: START/BID/PASS/TICK/RESOLVE/NEXT_PLAYER
-- [ ] 10s timer via TICK events; reset on bid; expiry → RTM check → SOLD/UNSOLD
-- [ ] No-bid lots resolve in 4 ticks (pacing with a 100-player pool)
-- [ ] End condition: all squads full OR pool exhausted (~40 unsold is normal)
-- [ ] `rtm.ts` — RTM offer → one raise → match/decline; respects soft-lock
-- [ ] Accelerated round after Set 12 (6s timer, mandatory-unfilled roles only)
-- [ ] `scoring.ts` — Σ ratings + balance bonuses, missing-role penalty
-- [ ] Tests: increment ladder edges (99→100, 500→550)
-- [ ] Tests: soft-lock — bid rejected when budget-bid < reserve
-- [ ] Tests: squad validation incl. overseas cap
-- [ ] Tests: RTM paths (no card, declined, matched, raise-then-match)
-- [ ] Tests: full auction with 4 random bidders completes, all states legal
-- [ ] `/debug` route: auto-run a full random auction, dump log
-- [ ] **GATE 🧑:** `npm test` green; debug page completes a full auction
+- [x] `rng.ts` — mulberry32 seeded PRNG (engine never calls Math.random)
+- [x] `sets.ts` — 12 fixed sets, seeded within-set shuffle, set transitions
+- [x] `bids.ts` — increment ladder (<100→+10, 100–500→+25, >500→+50), bid validation
+- [x] `rules.ts` — squad caps (15 / 6 overseas), role minimums, reserve/soft-lock math
+- [x] `auction.ts` — `applyEvent` reducer: START/BID/PASS/TICK/RESOLVE/NEXT_PLAYER
+- [x] 10s timer via TICK events; reset on bid; expiry → RTM check → SOLD/UNSOLD
+- [x] No-bid lots resolve in 4 ticks (pacing with a 100-player pool)
+- [x] End condition: all squads full OR pool exhausted (~40 unsold is normal)
+- [x] `rtm.ts` — RTM offer → one raise → match/decline; respects soft-lock
+- [x] Accelerated round after Set 12 (6s timer, mandatory-unfilled roles only)
+- [x] `scoring.ts` — Σ ratings + balance bonuses, missing-role penalty
+- [x] Tests: increment ladder edges (99→100, 500→550)
+- [x] Tests: soft-lock — bid rejected when budget-bid < reserve
+- [x] Tests: squad validation incl. overseas cap
+- [x] Tests: RTM paths (no card, declined, matched, raise-then-match)
+- [x] Tests: full auction with 4 random bidders completes, all states legal
+- [x] `/debug` route: auto-run a full random auction, dump log
+- [x] **GATE 🧑:** `npm test` green; debug page completes a full auction
 
 ## Phase 2 — Bots
 

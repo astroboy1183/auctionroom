@@ -93,7 +93,9 @@ whether the renderer is 2D DOM or a three.js canvas.
 
 **2. The engine is a pure reducer.** Not a class with methods and internal
 timers: `applyEvent(state, event) → state`. Events are
-`START | BID | PASS | TICK | RESOLVE | RTM_OFFER | RTM_DECIDE | NEXT_PLAYER`.
+`START | BID | PASS | TICK | RTM_OFFER_RESPONSE | RTM_RAISE | RTM_DECIDE |
+NEXT_PLAYER` — TICK also performs lot resolution when the clock runs out, so
+there is no separate RESOLVE event.
 The same function runs in the browser in v0/v1 and inside the Durable Object
 in v2, so Phase 6 is a lift, not a rewrite.
 
