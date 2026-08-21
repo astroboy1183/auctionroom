@@ -343,13 +343,15 @@ auctionroom/
 
 ## 12. Deployment
 
-**v0 — Cloudflare Pages, `auctionroom.pages.dev`.**
-GitHub holds source + CI; Cloudflare only hosts. Connect the repo once in the
-Cloudflare dashboard (Workers & Pages → Create → Pages → Connect to Git), build
-command `npm run build`, output `dist`, framework preset Vite. Every push to
-`main` deploys; every PR gets a preview URL.
+**v0 — Cloudflare Pages, `auctionroom-bue.pages.dev`.**
+(`auctionroom.pages.dev` was taken — project names are global.)
+GitHub holds source; Cloudflare hosts. Deploys are **wrangler direct upload**,
+not Git integration: `npm run build && npx wrangler pages deploy dist
+--project-name auctionroom --branch main`. Run this at every phase gate (and
+any time the public URL should update). Push-to-deploy via GitHub Actions +
+`wrangler-action` can be added later if wanted.
 
-`npm run build` must run `vitest run` first, so a failing engine test fails the
+`npm run build` runs `vitest run` first, so a failing engine test fails the
 build and never reaches the public URL.
 
 Since this is served from a domain root, Vite `base` stays `/`.

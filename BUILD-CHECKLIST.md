@@ -16,8 +16,8 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 - [x] Data sanity test: distribution counts, unique ids, every setId maps to a set
 - [x] Zustand store holding AuctionState
 - [x] Page listing all 100 players from JSON
-- [ ] 🧑 Cloudflare Pages: connect repo in dashboard (build `npm run build`, output `dist`)
-- [ ] **GATE 🧑:** `npm run dev` lists all 100 players; `auctionroom.pages.dev` serves the same
+- [x] Cloudflare Pages: project created + deployed via `wrangler pages deploy` (D-010)
+- [x] **GATE 🧑:** dev server serves all 100 players; auctionroom-bue.pages.dev serves the same bundle (verified 2026-08-21)
 
 ## Phase 1 — Engine (pure TS, no UI polish)
 

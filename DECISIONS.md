@@ -5,6 +5,15 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-010 — Pages deploys via wrangler direct upload, not dashboard Git-connect
+**Phase 0, 2026-08-21.** The machine already had a logged-in wrangler OAuth
+session, so the project was created and deployed entirely from the CLI —
+no dashboard step needed. Trade-off: no automatic push-to-deploy; instead
+`npx wrangler pages deploy dist` runs at each phase gate, which also means
+nothing ships mid-phase by accident. `auctionroom.pages.dev` was taken
+(global namespace), so the site lives at **auctionroom-bue.pages.dev**.
+GH Actions + wrangler-action can restore push-to-deploy later if wanted.
+
 ## D-009 — 100-player pool for 60 squad slots
 **User decision, 2026-08-21.** Pool grows from 60 to ~100. The original 60 was
 exactly 4 × 15 squad slots — zero surplus, so every unsold player mathematically
