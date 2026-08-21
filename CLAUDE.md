@@ -26,8 +26,8 @@ the first 60 seconds.
 ## 2. Goals / Non-goals
 
 **Goals (v0):**
-- Complete solo auction: 100-player pool for 60 squad slots, 4 franchises
-  (1 human + 3 bots), full auction loop, squad building, final scoring screen.
+- Complete solo auction: 100-player pool for 96 squad slots, 8 franchises
+  (1 human + 7 bots), full auction loop, squad building, final scoring screen.
 - Bot bidders with distinct personalities that feel intentional, not random.
 - Playable end-to-end in ~15–20 minutes (no-interest lots resolve fast).
 - Deployable as a static site (no backend in v0).
@@ -128,7 +128,7 @@ interface Player {
 interface Franchise {
   id: string;
   name: string;           // fictional: "Hyderabad Hawks", "Mumbai Mavericks"
-  budget: number;         // starts at 9000 (₹90 Cr, in lakhs)
+  budget: number;         // starts at 12000 (₹120 Cr, in lakhs)
   squad: Player[];
   isHuman: boolean;
   botPersonality?: BotPersonality;
@@ -151,8 +151,9 @@ interface AuctionState {
 }
 ```
 
-**Squad rules (validated live):** max 15 players, max 6 overseas, must end with
-≥3 BAT, ≥3 BOWL, ≥1 WK, ≥1 AR. Budget cannot go below what's needed to fill
+**Squad rules (validated live):** max 12 players, max 4 overseas, must end with
+≥3 BAT, ≥3 BOWL, ≥1 WK, ≥1 AR — 8 of your 12 slots are mandatory, so every
+luxury buy costs you a required one. Budget cannot go below what's needed to fill
 minimum squad at base prices (prevent soft-locking).
 
 **Soft-lock math:** before accepting any bid, compute the *reserve* — the sum of
@@ -160,7 +161,8 @@ the cheapest remaining pool players that would satisfy this franchise's unfilled
 mandatory roles. A bid is legal only if `budget - bid >= reserve`. Applies
 identically to the human's BID button and every bot.
 
-**Bid increments:** below 100L → +10L; 100–500L → +25L; above 500L → +50L.
+**Bid increments:** <100L → +10L · <500L → +25L · <1000L → +50L ·
+<2000L → +100L · ≥2000L → +200L (upper rungs keep ₹120 Cr wars moving).
 
 ## 6. Player data (Phase 0 deliverable)
 
@@ -252,16 +254,24 @@ interface BotPersonality {
 Each bot gets a jittered reaction delay driven by `patience` — The Shark snaps
 in around 1s, The Accountant waits until ~7s. Delay is seeded, not `Math.random`.
 
-**Ship 3 named bots:** "The Shark" (high aggression, low patience),
-"The Accountant" (max discipline, value-only), "The Scout" (tag-obsessed with
-one random obsession per game, medium everything).
+**Ship 7 named bots** (one per rival franchise): "The Shark" (high aggression,
+low patience), "The Accountant" (max discipline, value-only), "The Scout"
+(tag-obsessed, random obsession per game), "The Gambler" (patient then reckless),
+"The Professor" (bowling-obsessed), "The Showman" (fast, flashy, tag-obsessed),
+"The Vulture" (max patience, hunts late bargains).
+
+**Desperation override.** When a player fills a mandatory hole and the pool is
+about to run dry of that role, value ceilings stop applying — the bot bids
+anyway (the soft-lock guard still bounds the spend). Without this, 8 teams
+chasing thin roles left squads structurally incomplete.
 
 ## 9. Screens
 
-1. **Lobby** — franchise picker (name + color), difficulty (bot aggression
-   multiplier), Start Auction.
+1. **Lobby** — franchise picker (8 franchises), difficulty (bot aggression
+   multiplier + wallet looseness), Start Auction.
 2. **Auction floor** (the main screen) — center: current player card (name,
-   role, tags, base price, rating shown as stars). Left: 4 franchise panels
+   role, tags, base price, rating shown as stars). Left: 8 franchise panels
+   (scrolling strip on mobile, 2-column board on desktop)
    (budget bars, squad count, needs indicator, RTM cards left). Bottom: BID
    button (shows next increment) + PASS. Bid history ticker. Current set name
    banner. 10-second timer ring that resets on each bid; when it expires →
@@ -308,10 +318,11 @@ Pages.
 ✅ Gate: a friend plays it from the public URL with zero instructions.
 
 **Phase 5 (v1) — 3D auction hall.** react-three-fiber scene behind the DOM UI:
-stage + podium, four franchise tables, low-poly auctioneer character with
-states (idle, calling, going-once lean, hammer slam) synced to the voice and
-engine phase, camera moves on set transitions and SOLD. Player reveal on the
-podium. Quality toggle; the 2D renderer remains selectable as a fallback.
+lit stage + podium, eight franchise tables whose paddles raise when that team
+leads, low-poly auctioneer (idle sway, gavel raised while a bid stands, slam on
+SOLD), instanced crowd that bobs harder in the closing seconds, camera that
+pushes in as the clock closes and on SOLD. All geometry is primitives — no GLB
+assets (D-013). Lazy-loaded chunk; 🏟 toggle returns to the 2D renderer.
 Still a static deploy — no backend.
 ✅ Gate: full auction in 3D on desktop AND a mid-range phone at playable
 frame rate; 2D fallback still works.

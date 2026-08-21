@@ -3,7 +3,7 @@ import { adjustedEstimate, attachBotPersonalities, botAction, rawValueEstimate, 
 import { simulateBotAuction } from "../src/engine/simulate";
 import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../src/engine/rules";
 import { makeDefaultFranchises } from "../src/engine/franchises";
-import { biddingState } from "./helpers";
+import { biddingState, player } from "./helpers";
 import playersJson from "../src/data/players.json";
 import type { Player } from "../src/engine/types";
 
@@ -19,9 +19,9 @@ function bottedFranchises(difficulty = 1, seed = 7) {
 
 describe("valuation", () => {
   it("rating value is exponential: stars cost multiples", () => {
-    expect(ratingValue(60)).toBe(30);
+    expect(ratingValue(60)).toBe(50);
     expect(ratingValue(85)).toBeGreaterThan(3 * ratingValue(70));
-    expect(ratingValue(98)).toBeGreaterThan(2000);
+    expect(ratingValue(98)).toBeGreaterThan(3000);
   });
 
   it("The Accountant's ceiling never exceeds the raw value estimate", () => {
@@ -51,8 +51,10 @@ describe("bidding behaviour", () => {
   it("patience gates entry: the Shark acts early, the Accountant lurks", () => {
     const franchises = bottedFranchises();
     const star = allPlayers.find((p) => p.id === "virat-kohli")!;
-    // Fresh lot, full timer: elapsed 0.
-    const state = biddingState({ franchises, currentPlayer: star, pool: [star], timer: 10 });
+    // Fresh lot, full timer: elapsed 0. Pool has plenty of batters left, so
+    // nobody is in desperation mode.
+    const supply = Array.from({ length: 6 }, () => player({ role: "BAT" }));
+    const state = biddingState({ franchises, currentPlayer: star, pool: [star, ...supply], timer: 10 });
     const shark = franchises.find((f) => f.botPersonality?.name === "The Shark")!;
     const accountant = franchises.find((f) => f.botPersonality?.name === "The Accountant")!;
     // Accountant's entry tick is ~6: at elapsed 0 it never acts, whatever the roll.
@@ -68,10 +70,11 @@ describe("bidding behaviour", () => {
   it("bots pass when the price leaves their number", () => {
     const franchises = bottedFranchises();
     const cheap = allPlayers.find((p) => p.rating <= 75)!;
+    const supply = Array.from({ length: 6 }, () => player({ role: cheap.role }));
     const state = biddingState({
       franchises,
       currentPlayer: cheap,
-      pool: [cheap],
+      pool: [cheap, ...supply], // ample supply → desperation can't kick in
       currentBid: 3000, // wildly over any estimate for a 75-rated player
       currentBidderId: "hyd",
       timer: 3,

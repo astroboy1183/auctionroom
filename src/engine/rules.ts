@@ -3,8 +3,8 @@
 import type { AuctionState, Franchise, Player, Role } from "./types";
 import { nextBidAmount } from "./bids";
 
-export const SQUAD_MAX = 15;
-export const OVERSEAS_MAX = 6;
+export const SQUAD_MAX = 12; // 8 teams × 12 = 96 slots vs a 100-player pool
+export const OVERSEAS_MAX = 4;
 export const MIN_ROLES: Record<Role, number> = { BAT: 3, BOWL: 3, WK: 1, AR: 1 };
 export const ROLES: Role[] = ["BAT", "BOWL", "AR", "WK"];
 

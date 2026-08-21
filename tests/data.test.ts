@@ -47,12 +47,12 @@ describe("players.json sanity (CLAUDE.md §6/§7)", () => {
     }
   });
 
-  it("pool can satisfy 4 franchises' minimum role requirements", () => {
-    // ≥3 BAT, ≥3 BOWL, ≥1 WK, ≥1 AR per franchise × 4 franchises
+  it("pool can satisfy 8 franchises' minimum role requirements", () => {
+    // ≥3 BAT, ≥3 BOWL, ≥1 WK, ≥1 AR per franchise × 8 franchises
     const n = (r: string) => pool.filter(p => p.role === r).length;
-    expect(n("BAT")).toBeGreaterThanOrEqual(12);
-    expect(n("BOWL")).toBeGreaterThanOrEqual(12);
-    expect(n("WK")).toBeGreaterThanOrEqual(4);
-    expect(n("AR")).toBeGreaterThanOrEqual(4);
+    expect(n("BAT")).toBeGreaterThanOrEqual(24);
+    expect(n("BOWL")).toBeGreaterThanOrEqual(24);
+    expect(n("WK")).toBeGreaterThanOrEqual(8);
+    expect(n("AR")).toBeGreaterThanOrEqual(8);
   });
 });

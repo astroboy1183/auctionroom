@@ -1,6 +1,7 @@
 // Final scores side by side, winner declared, share text — CLAUDE.md §9.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { fanfare } from "../lib/audio";
 import { motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { finalScores } from "../engine/scoring";
@@ -18,6 +19,11 @@ export default function Results() {
   const [copied, setCopied] = useState(false);
 
   const scores = useMemo(() => finalScores(auction.franchises, START_BUDGET), [auction]);
+  const soundOn = useGameStore((s) => s.soundOn);
+  useEffect(() => {
+    if (soundOn) fanfare();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const winner = auction.franchises.find((f) => f.id === scores[0].franchiseId)!;
   const humanRank = scores.findIndex((s) => s.franchiseId === humanId) + 1;
 

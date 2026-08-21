@@ -29,11 +29,11 @@ describe("squad validation", () => {
   });
 
   it("blocks filling a slot that mandatory roles still need (slot-lock)", () => {
-    // 13 players, no WK, no AR → both remaining slots are spoken for.
+    // 10 players, no WK, no AR → both remaining slots are spoken for.
     const f = franchise({
       squad: [
-        ...Array.from({ length: 7 }, () => player({ role: "BAT" })),
-        ...Array.from({ length: 6 }, () => player({ role: "BOWL" })),
+        ...Array.from({ length: 5 }, () => player({ role: "BAT" })),
+        ...Array.from({ length: 5 }, () => player({ role: "BOWL" })),
       ],
     });
     const remaining = [player({ role: "WK" }), player({ role: "AR" })];

@@ -13,9 +13,10 @@ describe("game store wiring", () => {
     expect(human.isHuman).toBe(true);
     expect(human.botPersonality).toBeUndefined();
     const bots = a.franchises.filter((f) => !f.isHuman);
-    expect(bots).toHaveLength(3);
+    expect(bots).toHaveLength(7);
     for (const b of bots) expect(b.botPersonality).toBeDefined();
-    for (const f of a.franchises) expect(f.formerPlayerIds).toHaveLength(4);
+    expect(new Set(bots.map((b) => b.botPersonality!.name)).size).toBe(7);
+    for (const f of a.franchises) expect(f.formerPlayerIds).toHaveLength(3);
   });
 
   it("dispatch routes through the reducer (human bid leads the lot)", () => {

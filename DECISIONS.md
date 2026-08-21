@@ -5,6 +5,42 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-014 — Desperation override in the bidding brain
+**v1, 2026-08-21.** When a player fills a mandatory role hole and the remaining
+pool can no longer cover that deficit, bots ignore their value ceiling and bid
+anyway (patience drops to zero, bid probability 0.92). The soft-lock guard in
+`canBid` still bounds the actual spend, so this can't bankrupt anyone.
+**Why:** with 8 teams chasing the same thin WK/AR supply, disciplined bots
+politely passed themselves into invalid squads — mandatory minimums met fell to
+79/96. With the override it's 95/96, and late-auction scarcity now produces
+genuine panic-buying, which is exactly what real auctions look like.
+
+## D-013 — The 3D hall is built from primitives, not GLB assets
+**v1, 2026-08-21.** The spec called for a low-poly auctioneer GLB with Draco
+compression. Shipped instead: every object — auctioneer, podium, eight tables,
+paddles, instanced crowd — is three.js primitive geometry composed in code.
+**Why:** no asset pipeline, no binary files in git, nothing to fetch at runtime,
+and the whole hall still lazy-loads as one 235 KB gzipped chunk that never
+touches the network beyond the JS itself. The stylised look is consistent with
+the 2D UI.
+**Rules out:** realistic character animation (no rig, no skinned mesh). Facial
+expression and lip-sync are off the table; the auctioneer emotes through arm
+motion and body sway.
+
+## D-012 — Eight franchises, ₹120 Cr purses, 12-player squads
+**User decision, 2026-08-21.** The league doubled from 4 to 8 teams and purses
+rose from ₹90 Cr to ₹120 Cr (the real 2025 figure).
+**Forced consequence:** 8 × 15 = 120 squad slots against a 100-player pool is
+impossible, so `SQUAD_MAX` drops 15 → 12 (8 × 12 = 96 slots, a 4-player
+surplus) and `OVERSEAS_MAX` scales 6 → 4. Mandatory minimums stay at
+3/3/1/1 — now 8 of 12 slots, which *raises* tension per pick.
+**Also:** bid ladder gains upper rungs (+100 above ₹10 Cr, +200 above ₹20 Cr)
+so big-money wars don't crawl; `ratingValue` base rescaled 30 → 50 and
+per-slot budget pressure re-normalised for the larger purses; RTM former-player
+lists trimmed 4 → 3 each so RTM stays special across 8 teams.
+**Measured after:** avg price ₹10 Cr (was ₹6.2 Cr), p90 ₹24 Cr, top sale
+₹54 Cr, ~7 unsold per auction, 95/96 squads legal, 1000/1000 sims valid.
+
 ## D-011 — All sound is synthesized: WebAudio SFX + pure-TTS auctioneer
 **Phase 4, 2026-08-21.** The spec named Howler.js and pre-recorded auctioneer
 phrases; v0 ships with neither. Bid blips, the final-seconds clock, and the

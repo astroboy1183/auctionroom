@@ -83,16 +83,28 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 5 (v1) — 3D auction hall
 
-- [ ] Add `three` + `@react-three/fiber` + `@react-three/drei` as a lazy-loaded chunk
-- [ ] Hall scene: stage, podium, 4 franchise tables, lighting, crowd backdrop
-- [ ] Low-poly auctioneer model (GLB, Draco): idle / calling / going-once lean / hammer slam
-- [ ] State bridge: animation + camera driven by engine phase (no engine imports of three)
-- [ ] Player reveal on podium at NEXT_PLAYER; camera move on set transitions and SOLD
-- [ ] Auctioneer animation synced to Phase 4 voice lines
-- [ ] DOM UI overlays the canvas — bid buttons/panels/timer unchanged from v0
-- [ ] Quality toggle (pixel ratio, shadows off) + renderer switch back to 2D mode
-- [ ] Perf pass: 60fps desktop, playable on a mid-range phone; bundle check
+- [x] Add `three` + `@react-three/fiber` as a lazy-loaded chunk (drei not needed)
+- [x] Hall scene: lit stage, podium, 8 franchise tables, instanced crowd (180 figures)
+- [x] Auctioneer built from primitives (D-013): idle sway, gavel raised on bid, slam on SOLD
+- [x] State bridge: per-frame store reads drive animation + camera; engine never imports three
+- [x] Camera pushes in as the clock closes and on SOLD; paddles raise for the leading team
+- [x] Auctioneer animation synced to engine phase (and therefore the voice lines)
+- [x] DOM UI overlays the canvas — bid buttons/panels/timer unchanged from v0
+- [x] Capped DPR (1–1.75), no shadows; 🏟 toggle switches back to the 2D renderer
+- [x] Bundle check: main 130 KB gzip unchanged, hall a separate 235 KB lazy chunk
 - [ ] **GATE 🧑:** full 3D auction on desktop AND phone; 2D fallback still works
+
+## v1 extras (beyond the original Phase 5 scope)
+
+- [x] 8 franchises, ₹120 Cr purses, 12-player squads, overseas cap 4 (D-012)
+- [x] Bid ladder extended: +100 above ₹10 Cr, +200 above ₹20 Cr
+- [x] 7 bot personalities — Gambler, Professor, Showman, Vulture added
+- [x] Desperation override so thin roles get fought over (D-014)
+- [x] Crowd bed: looped brown-noise murmur that swells on big bids
+- [x] Interaction SFX: paddle thwack on your bid, whoosh on pass, RTM sting,
+      set-change motif, winner fanfare
+- [x] Auctioneer calls big money live ("nine crore!") over the crowd
+- [ ] **GATE 🧑:** play a full 8-team auction in the 3D hall with sound on
 
 ## Phase 6 (v2) — Multiplayer
 

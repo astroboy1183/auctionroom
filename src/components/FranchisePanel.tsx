@@ -25,7 +25,7 @@ export default function FranchisePanel({ franchise: f, isLeading, passed }: Prop
           : { scale: 1, boxShadow: "0 0 0 1px rgb(51 65 85 / 0.6)" }
       }
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className={`rounded-xl bg-slate-900/80 p-3 ${passed ? "opacity-45" : ""}`}
+      className={`rounded-xl bg-slate-900/70 p-3 backdrop-blur-sm ${passed ? "opacity-45" : ""}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-center gap-1.5 truncate text-sm font-bold">

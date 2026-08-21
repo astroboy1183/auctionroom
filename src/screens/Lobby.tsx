@@ -26,7 +26,7 @@ export default function Lobby() {
           Auction<span className="text-amber-400">Room</span>
         </h1>
         <p className="mt-2 text-center text-sm text-slate-400">
-          100 cricketers. {money(START_BUDGET)} purse. 3 rival bots. Build the best squad.
+          100 cricketers. {money(START_BUDGET)} purse. 7 rival bots. Build the best squad.
         </p>
 
         <h2 className="mt-8 text-xs font-black uppercase tracking-widest text-slate-500">Your franchise</h2>

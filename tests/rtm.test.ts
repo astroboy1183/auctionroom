@@ -58,7 +58,7 @@ describe("RTM flow (CLAUDE.md §7)", () => {
     s = applyEvent(s, { type: "RTM_DECIDE", match: true });
     expect(s.phase).toBe("sold");
     expect(mum(s).squad.map((p) => p.id)).toEqual(["star"]);
-    expect(mum(s).budget).toBe(9000 - 100);
+    expect(mum(s).budget).toBe(12000 - 100);
     expect(mum(s).rtmCards).toBe(1);
     expect(del(s).squad).toHaveLength(0);
   });
@@ -70,7 +70,7 @@ describe("RTM flow (CLAUDE.md §7)", () => {
     expect(s.rtmOffer?.amount).toBe(125);
     expect(s.rtmOffer?.raiseUsed).toBe(true);
     s = applyEvent(s, { type: "RTM_DECIDE", match: true });
-    expect(mum(s).budget).toBe(9000 - 125);
+    expect(mum(s).budget).toBe(12000 - 125);
     expect(mum(s).rtmCards).toBe(1);
   });
 
@@ -81,7 +81,7 @@ describe("RTM flow (CLAUDE.md §7)", () => {
     s = applyEvent(s, { type: "RTM_DECIDE", match: false });
     expect(s.phase).toBe("sold");
     expect(del(s).squad.map((p) => p.id)).toEqual(["star"]);
-    expect(del(s).budget).toBe(9000 - 125);
+    expect(del(s).budget).toBe(12000 - 125);
     expect(mum(s).rtmCards).toBe(2); // card only spent on an actual match
   });
 });

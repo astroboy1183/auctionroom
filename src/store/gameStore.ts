@@ -20,9 +20,11 @@ interface GameStore {
   humanId: string;
   difficulty: Difficulty;
   soundOn: boolean;
+  view3d: boolean;
   dispatch: (event: AuctionEvent) => void;
   startGame: (humanId: string, difficulty: Difficulty) => void;
   toggleSound: () => void;
+  toggleView3d: () => void;
   reset: () => void;
 }
 
@@ -33,6 +35,7 @@ export const useGameStore = create<GameStore>((set) => ({
   humanId: "hyd",
   difficulty: "normal",
   soundOn: true,
+  view3d: true,
   dispatch: (event) => set((s) => ({ auction: applyEvent(s.auction, event) })),
   startGame: (humanId, difficulty) =>
     set(() => {
@@ -46,5 +49,6 @@ export const useGameStore = create<GameStore>((set) => ({
       return { humanId, difficulty, auction: applyEvent(lobby, { type: "START", seed }) };
     }),
   toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
+  toggleView3d: () => set((s) => ({ view3d: !s.view3d })),
   reset: () => set({ auction: fresh() }),
 }));

@@ -9,13 +9,14 @@ import { ACCEL_SECONDS, LOT_SECONDS } from "./auction";
 
 // ---------------------------------------------------------------- valuation
 
-/** Market value of a rating, in lakhs. Exponential: stars cost multiples. */
+/** Market value of a rating, in lakhs. Exponential: stars cost multiples.
+ * Calibrated for 8 × ₹120 Cr purses chasing ~96 squad slots. */
 export function ratingValue(rating: number): number {
-  return Math.round((30 * Math.exp((rating - 60) / 8.5)) / 5) * 5;
+  return Math.round((50 * Math.exp((rating - 60) / 8.5)) / 5) * 5;
 }
 
-/** Typical squad shape — owning more than this makes a role a luxury buy. */
-const ROLE_TYPICAL: Record<Role, number> = { BAT: 5, BOWL: 6, AR: 3, WK: 2 };
+/** Typical squad shape (12-player squads) — beyond this a role is a luxury. */
+const ROLE_TYPICAL: Record<Role, number> = { BAT: 4, BOWL: 5, AR: 3, WK: 2 };
 
 /**
  * Franchise-relative value before personality: rating value scaled by squad
@@ -40,7 +41,7 @@ export function rawValueEstimate(state: AuctionState, franchise: Franchise, play
   const slotsLeft = Math.max(1, SQUAD_MAX - franchise.squad.length);
   const spendable = Math.max(0, franchise.budget - reserve(franchise.squad, remainingPool(state)));
   const perSlot = spendable / slotsLeft;
-  value *= Math.min(1.4, Math.max(0.7, Math.sqrt(perSlot / 550)));
+  value *= Math.min(1.5, Math.max(0.6, Math.sqrt(perSlot / 800)));
 
   return Math.round(value);
 }
@@ -88,19 +89,29 @@ export function botAction(state: AuctionState, franchiseId: string, rng: Rng): [
   }
 
   const p = franchise.botPersonality;
-  const amount = nextBidAmount(state.currentBid, state.currentPlayer.basePrice);
-  const estimate = adjustedEstimate(state, franchise, state.currentPlayer);
-  if (amount > estimate) return ["pass", rng]; // price has left our number
+  const player = state.currentPlayer;
+  const amount = nextBidAmount(state.currentBid, player.basePrice);
+  const estimate = adjustedEstimate(state, franchise, player);
+
+  // Desperation: this player fills a mandatory hole and the pool is running
+  // out of that role. Real teams overpay here — value ceilings stop mattering
+  // (the soft-lock guard in canBid still bounds the spend).
+  const deficit = unfilledNeeds(franchise.squad)[player.role] ?? 0;
+  const supply = remainingPool(state).filter((x) => x.role === player.role).length;
+  const desperate = deficit > 0 && supply <= deficit;
+
+  if (!desperate && amount > estimate) return ["pass", rng]; // price left our number
 
   // Patience gates entry: patient bots lurk before they even consider acting.
+  // A desperate bot has no patience left.
   const lotLen = state.accelerated ? ACCEL_SECONDS : LOT_SECONDS;
   const elapsed = lotLen - state.timer;
-  const entryTick = Math.ceil(p.patience * (lotLen - 3));
+  const entryTick = desperate ? 0 : Math.ceil(p.patience * (lotLen - 3));
   const lastChance = state.timer <= 1;
   if (elapsed < entryTick && !lastChance) return [null, rng];
 
   // Hesitation: even with value on the table, sometimes let it slide — drama.
-  const pBid = lastChance ? 0.9 : 0.35 + 0.45 * p.aggression;
+  const pBid = desperate ? 0.92 : lastChance ? 0.9 : 0.35 + 0.45 * p.aggression;
   const [roll, next] = nextFloat(rng);
   return [roll < pBid ? "bid" : null, next];
 }
@@ -148,15 +159,24 @@ export function attachBotPersonalities(
   seed: number,
 ): Franchise[] {
   const [tagIdx] = nextInt(seed >>> 0, SCOUT_TAGS.length);
+  const [tagIdx2] = nextInt((seed + 13) >>> 0, SCOUT_TAGS.length);
   const clamp = (x: number) => Math.min(1, Math.max(0, x));
   // Difficulty pushes aggression up AND discipline down — harder bots bid
   // more often, hold higher ceilings, and untie their wallets.
   const loosen = (d: number) => clamp(d - (difficulty - 1) * 0.4);
+  // Seven rivals, seven temperaments (CLAUDE.md §8 shipped three; five-a-side
+  // wasn't enough once the league grew to eight franchises).
   const personalities = [
     { name: "The Shark", aggression: clamp(0.9 * difficulty), patience: 0.15, budgetDiscipline: loosen(0.25) },
     { name: "The Accountant", aggression: clamp(0.15 * difficulty), patience: 0.85, budgetDiscipline: loosen(0.95) },
     { name: "The Scout", aggression: clamp(0.5 * difficulty), patience: 0.5, budgetDiscipline: loosen(0.5),
       tagObsession: SCOUT_TAGS[tagIdx] },
+    { name: "The Gambler", aggression: clamp(0.75 * difficulty), patience: 0.7, budgetDiscipline: loosen(0.3) },
+    { name: "The Professor", aggression: clamp(0.4 * difficulty), patience: 0.6, budgetDiscipline: loosen(0.7),
+      roleObsession: "BOWL" as const },
+    { name: "The Showman", aggression: clamp(0.8 * difficulty), patience: 0.3, budgetDiscipline: loosen(0.4),
+      tagObsession: SCOUT_TAGS[tagIdx2] },
+    { name: "The Vulture", aggression: clamp(0.3 * difficulty), patience: 0.9, budgetDiscipline: loosen(0.6) },
   ];
   let i = 0;
   return franchises.map((f) =>

@@ -1,12 +1,12 @@
 // The main screen — CLAUDE.md §9. Player card center, franchise panels,
 // BID/PASS, ticker, timer ring, set banner, RTM modal, sold interstitials.
 
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { useAuctionDriver } from "../hooks/useAuctionDriver";
 import { useSoundEffects } from "../hooks/useSoundEffects";
-import { hushAuctioneer } from "../lib/audio";
+import { hushAuctioneer, whoosh } from "../lib/audio";
 import { canBid } from "../engine/rules";
 import { nextBidAmount } from "../engine/bids";
 import { ACCEL_SECONDS, LOT_SECONDS } from "../engine/auction";
@@ -19,6 +19,9 @@ import SoldBanner from "../components/SoldBanner";
 import SquadDrawer from "../components/SquadDrawer";
 import { money } from "../components/format";
 
+// The 3D hall is a heavy chunk; it loads lazily and only when enabled.
+const Hall = lazy(() => import("../scene/Hall"));
+
 export default function AuctionFloor() {
   useAuctionDriver();
   useSoundEffects();
@@ -27,6 +30,8 @@ export default function AuctionFloor() {
   const dispatch = useGameStore((s) => s.dispatch);
   const soundOn = useGameStore((s) => s.soundOn);
   const toggleSound = useGameStore((s) => s.toggleSound);
+  const view3d = useGameStore((s) => s.view3d);
+  const toggleView3d = useGameStore((s) => s.toggleView3d);
   const [squadOpen, setSquadOpen] = useState(false);
 
   const player = auction.currentPlayer;
@@ -42,21 +47,27 @@ export default function AuctionFloor() {
   const remaining = auction.pool.length - auction.poolIndex;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className={`min-h-screen text-slate-100 ${view3d ? "bg-transparent" : "bg-slate-950"}`}>
+      {view3d && (
+        <Suspense fallback={null}>
+          <Hall />
+        </Suspense>
+      )}
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-3 py-4 lg:flex-row lg:px-4">
-        {/* franchise panels — the broadcast big board */}
-        <aside className="grid shrink-0 grid-cols-2 gap-2 lg:w-64 lg:grid-cols-1 lg:content-start">
+        {/* franchise panels — the broadcast big board (8 teams) */}
+        <aside className="flex shrink-0 snap-x gap-2 overflow-x-auto pb-1 lg:grid lg:w-[380px] lg:grid-cols-2 lg:content-start lg:overflow-visible lg:pb-0">
           {auction.franchises.map((f) => (
-            <FranchisePanel
-              key={f.id}
-              franchise={f}
-              isLeading={auction.currentBidderId === f.id}
-              passed={auction.passed.includes(f.id)}
-            />
+            <div key={f.id} className="w-[46%] shrink-0 snap-start lg:w-auto">
+              <FranchisePanel
+                franchise={f}
+                isLeading={auction.currentBidderId === f.id}
+                passed={auction.passed.includes(f.id)}
+              />
+            </div>
           ))}
           <button
             onClick={() => setSquadOpen(true)}
-            className="col-span-2 rounded-xl border border-slate-800 py-2 text-sm font-bold text-slate-300 hover:bg-slate-900 lg:col-span-1"
+            className="w-[46%] shrink-0 rounded-xl border border-slate-800 py-2 text-sm font-bold text-slate-300 hover:bg-slate-900 lg:col-span-2 lg:w-auto"
           >
             My Squad →
           </button>
@@ -70,6 +81,13 @@ export default function AuctionFloor() {
             </motion.span>
             <span className="flex items-center gap-3">
               {remaining} to go
+              <button
+                onClick={toggleView3d}
+                title={view3d ? "switch to 2D" : "switch to 3D hall"}
+                className={`rounded px-1 text-base leading-none hover:bg-slate-800 ${view3d ? "" : "opacity-40"}`}
+              >
+                🏟
+              </button>
               <button
                 onClick={() => { if (soundOn) hushAuctioneer(); toggleSound(); }}
                 title={soundOn ? "mute" : "unmute"}
@@ -122,14 +140,14 @@ export default function AuctionFloor() {
             </motion.button>
             <button
               disabled={humanPassed || auction.currentBidderId === humanId}
-              onClick={() => dispatch({ type: "PASS", franchiseId: humanId })}
+              onClick={() => { whoosh(); dispatch({ type: "PASS", franchiseId: humanId }); }}
               className="rounded-xl border border-slate-700 px-5 font-bold text-slate-300 enabled:hover:bg-slate-900 disabled:opacity-40"
             >
               {humanPassed ? "Out" : "Pass"}
             </button>
           </div>
 
-          <div className="mx-auto mt-4 max-w-md rounded-xl border border-slate-800/70 bg-slate-900/40 p-3">
+          <div className="mx-auto mt-4 max-w-md rounded-xl border border-slate-800/70 bg-slate-900/50 p-3 backdrop-blur-sm">
             <BidTicker auction={auction} />
           </div>
         </main>
