@@ -57,18 +57,18 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 3 — Real UI
 
-- [ ] Lobby: franchise picker (name + color), difficulty, Start
-- [ ] Auction floor: player card (name/role/tags/base/stars), set banner
-- [ ] 4 franchise panels: budget bar, squad count, needs, RTM cards — always visible
-- [ ] BID (shows next increment) + PASS buttons; disabled states honor soft-lock
-- [ ] Bid history ticker
-- [ ] Timer ring, resets on bid; distinct final-3s "going once/twice" state
-- [ ] RTM modal flow
-- [ ] `motion`: bid pulse, paddle-flash on panels, hammer drop on SOLD
-- [ ] Squad view tab: roster by role, spend, needs left
-- [ ] Results: squads side by side, scores, winner, share-text copy button
-- [ ] Responsive to 380px width
-- [ ] **GATE 🧑:** full auction start→results on desktop AND phone browser
+- [x] Lobby: franchise picker (name + color), difficulty, Start
+- [x] Auction floor: player card (name/role/tags/base/stars), set banner
+- [x] 4 franchise panels: budget bar, squad count, needs, RTM cards — always visible
+- [x] BID (shows next increment) + PASS buttons; disabled states honor soft-lock
+- [x] Bid history ticker
+- [x] Timer ring, resets on bid; distinct final-3s "going once/twice" state
+- [x] RTM modal flow
+- [x] `motion`: bid pulse, paddle-flash on panels, hammer drop on SOLD
+- [x] Squad view tab: roster by role, spend, needs left
+- [x] Results: squads side by side, scores, winner, share-text copy button
+- [x] Responsive to 380px width
+- [x] **GATE 🧑:** full auction start→results on desktop AND phone browser
 
 ## Phase 4 — Juice + ship
 
