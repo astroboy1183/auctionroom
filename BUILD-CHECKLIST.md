@@ -5,30 +5,32 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 0 — Skeleton + data + pipeline
 
-- [ ] `git init`, first commit, `gh repo create auctionroom` and push
-- [ ] Scaffold Vite + React 19 + TS (`npm create vite@latest`)
-- [ ] Tailwind v4 via `@tailwindcss/vite` plugin (CSS-first config, no tailwind.config.js)
-- [ ] Install: zustand, motion, react-router; dev: vitest
-- [ ] `npm run build` script runs `vitest run` before `vite build`
-- [ ] `src/engine/types.ts` — Player, Franchise, AuctionState, events, BotPersonality
-- [ ] `src/data/players.json` — 60 players: ~20 BAT / ~18 BOWL / ~12 AR / ~10 WK,
-      ~20 overseas, base 30L–200L, ratings 60–100, tags, `setId` per CLAUDE.md §7
-- [ ] Data sanity test: distribution counts, unique ids, every setId maps to a set
-- [ ] Zustand store holding AuctionState
-- [ ] Page listing all 60 players from JSON
+- [x] `git init`, first commit, `gh repo create auctionroom` and push
+- [x] Scaffold Vite + React 19 + TS (`npm create vite@latest`)
+- [x] Tailwind v4 via `@tailwindcss/vite` plugin (CSS-first config, no tailwind.config.js)
+- [x] Install: zustand, motion, react-router; dev: vitest
+- [x] `npm run build` script runs `vitest run` before `vite build`
+- [x] `src/engine/types.ts` — Player, Franchise, AuctionState, events, BotPersonality
+- [x] `src/data/players.json` — 100 players: ~26 BAT / ~38 BOWL / ~21 AR / ~15 WK,
+      ~38 overseas, base 30L–200L, ratings 60–100, tags, `setId` per CLAUDE.md §7
+- [x] Data sanity test: distribution counts, unique ids, every setId maps to a set
+- [x] Zustand store holding AuctionState
+- [x] Page listing all 100 players from JSON
 - [ ] 🧑 Cloudflare Pages: connect repo in dashboard (build `npm run build`, output `dist`)
-- [ ] **GATE 🧑:** `npm run dev` lists all 60 players; `auctionroom.pages.dev` serves the same
+- [ ] **GATE 🧑:** `npm run dev` lists all 100 players; `auctionroom.pages.dev` serves the same
 
 ## Phase 1 — Engine (pure TS, no UI polish)
 
 - [ ] `rng.ts` — mulberry32 seeded PRNG (engine never calls Math.random)
-- [ ] `sets.ts` — 10 fixed sets, seeded within-set shuffle, set transitions
+- [ ] `sets.ts` — 12 fixed sets, seeded within-set shuffle, set transitions
 - [ ] `bids.ts` — increment ladder (<100→+10, 100–500→+25, >500→+50), bid validation
 - [ ] `rules.ts` — squad caps (15 / 6 overseas), role minimums, reserve/soft-lock math
 - [ ] `auction.ts` — `applyEvent` reducer: START/BID/PASS/TICK/RESOLVE/NEXT_PLAYER
 - [ ] 10s timer via TICK events; reset on bid; expiry → RTM check → SOLD/UNSOLD
+- [ ] No-bid lots resolve in 4 ticks (pacing with a 100-player pool)
+- [ ] End condition: all squads full OR pool exhausted (~40 unsold is normal)
 - [ ] `rtm.ts` — RTM offer → one raise → match/decline; respects soft-lock
-- [ ] Accelerated round after Set 10 (6s timer, mandatory-unfilled roles only)
+- [ ] Accelerated round after Set 12 (6s timer, mandatory-unfilled roles only)
 - [ ] `scoring.ts` — Σ ratings + balance bonuses, missing-role penalty
 - [ ] Tests: increment ladder edges (99→100, 500→550)
 - [ ] Tests: soft-lock — bid rejected when budget-bid < reserve

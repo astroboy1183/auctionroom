@@ -1,0 +1,92 @@
+// Core domain types. This file (and everything in src/engine/) must never
+// import React or touch the DOM — see CLAUDE.md §4.
+
+export type Role = "BAT" | "BOWL" | "AR" | "WK";
+
+export interface Player {
+  id: string;
+  name: string;           // real cricketer
+  role: Role;
+  basePrice: number;      // in lakhs, e.g. 200 = ₹2 Cr
+  rating: number;         // 60-100 overall skill (hand-tuned in data file)
+  tags: string[];         // "pace", "spin", "opener", "finisher", ...
+  overseas: boolean;
+  setId: string;          // auction set this player belongs to (CLAUDE.md §7)
+}
+
+export interface AuctionSet {
+  id: string;             // "S1".."S10"
+  name: string;           // "Marquee", "Batters I", ...
+  order: number;          // fixed auction order; shuffle happens within a set
+}
+
+export interface BotPersonality {
+  name: string;
+  aggression: number;       // 0-1: willingness to bid above value estimate
+  patience: number;         // 0-1: how long they lurk before entering
+  roleObsession?: Role;     // overvalues this role by 20%
+  tagObsession?: string;    // e.g. "pace" — overvalues by 15%
+  budgetDiscipline: number; // 0-1: how hard they cap per-player spend
+}
+
+export interface Franchise {
+  id: string;
+  name: string;             // fictional: "Hyderabad Hawks", never real IPL names
+  color: string;            // tailwind-friendly hex, used by the UI only
+  budget: number;           // starts at 9000 (₹90 Cr, in lakhs)
+  squad: Player[];
+  isHuman: boolean;
+  botPersonality?: BotPersonality;
+  rtmCards: number;         // Right to Match cards remaining (start: 2)
+  formerPlayerIds: string[]; // players this franchise may RTM
+}
+
+export interface Bid {
+  franchiseId: string;
+  amount: number;           // lakhs
+  playerId: string;
+}
+
+export interface RtmOffer {
+  playerId: string;
+  formerFranchiseId: string;  // holder of the RTM right
+  winningFranchiseId: string; // won the open bidding
+  amount: number;             // current number to match
+  raiseUsed: boolean;         // winner's single post-RTM raise spent?
+}
+
+export type Phase =
+  | "lobby"
+  | "bidding"
+  | "rtm"
+  | "sold"
+  | "unsold"
+  | "finished";
+
+export interface AuctionState {
+  phase: Phase;
+  sets: AuctionSet[];         // ordered; pool is derived from these
+  pool: Player[];             // full auction order (seeded shuffle within sets)
+  poolIndex: number;          // next player to come up
+  currentPlayer: Player | null;
+  currentBid: number | null;
+  currentBidderId: string | null;
+  bidHistory: Bid[];
+  franchises: Franchise[];
+  timer: number;              // seconds left on current lot (10, resets on bid)
+  rtmOffer: RtmOffer | null;  // set when phase === "rtm"
+  accelerated: boolean;       // in the post-Set-10 accelerated round (6s timer)
+  rngSeed: number;            // engine never calls Math.random — CLAUDE.md §4
+}
+
+// Events consumed by the reducer in auction.ts (Phase 1).
+export type AuctionEvent =
+  | { type: "START"; seed: number }
+  | { type: "BID"; franchiseId: string }
+  | { type: "PASS"; franchiseId: string }
+  | { type: "TICK" }                                  // 1 second elapsed
+  | { type: "RESOLVE" }                               // timer hit 0 → sold/unsold/rtm
+  | { type: "RTM_OFFER_RESPONSE"; useCard: boolean }  // former franchise
+  | { type: "RTM_RAISE"; raise: boolean }             // original winner, once
+  | { type: "RTM_DECIDE"; match: boolean }            // former franchise, final
+  | { type: "NEXT_PLAYER" };

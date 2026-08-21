@@ -5,6 +5,19 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-009 — 100-player pool for 60 squad slots
+**User decision, 2026-08-21.** Pool grows from 60 to ~100. The original 60 was
+exactly 4 × 15 squad slots — zero surplus, so every unsold player mathematically
+shorted a squad and passing was always painful. Real auctions are the opposite:
+large surplus, most players unsold, and passing ("someone cheaper is coming")
+is the core skill. 100 players restores that dynamic at ~15–20 min of play.
+**Consequences:** 12 sets instead of 10 (WK II, Spinners II added; Uncapped
+set enlarged); auction ends when all squads are full or pool is exhausted;
+no-bid lots resolve in 4 ticks to protect pacing; ~38 overseas for 24 sellable
+overseas slots — overseas surplus going unsold is realistic.
+**Rules out:** the full ~400-player realistic list (1.5–2h sessions) — rejected
+for game length, not authenticity.
+
 ## D-008 — v0 ships 2D; v1 is the 3D upgrade; multiplayer moves to v2
 **User decision, 2026-08-21.** Version roadmap re-cut: v0 = complete 2D solo
 game (unchanged scope), v1 = 3D auction hall presentation, v2 = multiplayer

@@ -1,0 +1,1350 @@
+[
+  {
+    "id": "virat-kohli",
+    "name": "Virat Kohli",
+    "role": "BAT",
+    "basePrice": 200,
+    "rating": 97,
+    "tags": [
+      "anchor",
+      "chase-master",
+      "captain"
+    ],
+    "overseas": false,
+    "setId": "S1"
+  },
+  {
+    "id": "rohit-sharma",
+    "name": "Rohit Sharma",
+    "role": "BAT",
+    "basePrice": 200,
+    "rating": 93,
+    "tags": [
+      "opener",
+      "six-hitter",
+      "captain"
+    ],
+    "overseas": false,
+    "setId": "S1"
+  },
+  {
+    "id": "jasprit-bumrah",
+    "name": "Jasprit Bumrah",
+    "role": "BOWL",
+    "basePrice": 200,
+    "rating": 98,
+    "tags": [
+      "pace",
+      "death-bowler",
+      "yorker"
+    ],
+    "overseas": false,
+    "setId": "S1"
+  },
+  {
+    "id": "ben-stokes",
+    "name": "Ben Stokes",
+    "role": "AR",
+    "basePrice": 200,
+    "rating": 92,
+    "tags": [
+      "power-hitter",
+      "pace",
+      "clutch"
+    ],
+    "overseas": true,
+    "setId": "S1"
+  },
+  {
+    "id": "rishabh-pant",
+    "name": "Rishabh Pant",
+    "role": "WK",
+    "basePrice": 200,
+    "rating": 94,
+    "tags": [
+      "power-hitter",
+      "counter-attack"
+    ],
+    "overseas": false,
+    "setId": "S1"
+  },
+  {
+    "id": "travis-head",
+    "name": "Travis Head",
+    "role": "BAT",
+    "basePrice": 200,
+    "rating": 93,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S1"
+  },
+  {
+    "id": "andre-russell",
+    "name": "Andre Russell",
+    "role": "AR",
+    "basePrice": 200,
+    "rating": 91,
+    "tags": [
+      "power-hitter",
+      "pace",
+      "finisher"
+    ],
+    "overseas": true,
+    "setId": "S1"
+  },
+  {
+    "id": "jos-buttler",
+    "name": "Jos Buttler",
+    "role": "WK",
+    "basePrice": 200,
+    "rating": 92,
+    "tags": [
+      "opener",
+      "360",
+      "six-hitter"
+    ],
+    "overseas": true,
+    "setId": "S1"
+  },
+  {
+    "id": "shubman-gill",
+    "name": "Shubman Gill",
+    "role": "BAT",
+    "basePrice": 150,
+    "rating": 90,
+    "tags": [
+      "opener",
+      "anchor"
+    ],
+    "overseas": false,
+    "setId": "S2"
+  },
+  {
+    "id": "suryakumar-yadav",
+    "name": "Suryakumar Yadav",
+    "role": "BAT",
+    "basePrice": 150,
+    "rating": 94,
+    "tags": [
+      "360",
+      "finisher",
+      "six-hitter"
+    ],
+    "overseas": false,
+    "setId": "S2"
+  },
+  {
+    "id": "yashasvi-jaiswal",
+    "name": "Yashasvi Jaiswal",
+    "role": "BAT",
+    "basePrice": 150,
+    "rating": 91,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": false,
+    "setId": "S2"
+  },
+  {
+    "id": "kl-rahul",
+    "name": "KL Rahul",
+    "role": "WK",
+    "basePrice": 150,
+    "rating": 89,
+    "tags": [
+      "opener",
+      "anchor"
+    ],
+    "overseas": false,
+    "setId": "S2"
+  },
+  {
+    "id": "shreyas-iyer",
+    "name": "Shreyas Iyer",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 86,
+    "tags": [
+      "anchor",
+      "spin-hitter",
+      "captain"
+    ],
+    "overseas": false,
+    "setId": "S2"
+  },
+  {
+    "id": "david-warner",
+    "name": "David Warner",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 85,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S2"
+  },
+  {
+    "id": "ruturaj-gaikwad",
+    "name": "Ruturaj Gaikwad",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 87,
+    "tags": [
+      "opener",
+      "anchor"
+    ],
+    "overseas": false,
+    "setId": "S2"
+  },
+  {
+    "id": "harry-brook",
+    "name": "Harry Brook",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 85,
+    "tags": [
+      "360",
+      "counter-attack"
+    ],
+    "overseas": true,
+    "setId": "S2"
+  },
+  {
+    "id": "tim-david",
+    "name": "Tim David",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 84,
+    "tags": [
+      "finisher",
+      "six-hitter"
+    ],
+    "overseas": true,
+    "setId": "S2"
+  },
+  {
+    "id": "mitchell-starc",
+    "name": "Mitchell Starc",
+    "role": "BOWL",
+    "basePrice": 150,
+    "rating": 91,
+    "tags": [
+      "pace",
+      "swing",
+      "new-ball"
+    ],
+    "overseas": true,
+    "setId": "S3"
+  },
+  {
+    "id": "pat-cummins",
+    "name": "Pat Cummins",
+    "role": "BOWL",
+    "basePrice": 150,
+    "rating": 92,
+    "tags": [
+      "pace",
+      "captain",
+      "hard-length"
+    ],
+    "overseas": true,
+    "setId": "S3"
+  },
+  {
+    "id": "jofra-archer",
+    "name": "Jofra Archer",
+    "role": "BOWL",
+    "basePrice": 150,
+    "rating": 89,
+    "tags": [
+      "pace",
+      "express",
+      "death-bowler"
+    ],
+    "overseas": true,
+    "setId": "S3"
+  },
+  {
+    "id": "kagiso-rabada",
+    "name": "Kagiso Rabada",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 89,
+    "tags": [
+      "pace",
+      "death-bowler"
+    ],
+    "overseas": true,
+    "setId": "S3"
+  },
+  {
+    "id": "mohammed-shami",
+    "name": "Mohammed Shami",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 88,
+    "tags": [
+      "pace",
+      "seam",
+      "new-ball"
+    ],
+    "overseas": false,
+    "setId": "S3"
+  },
+  {
+    "id": "mohammed-siraj",
+    "name": "Mohammed Siraj",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 86,
+    "tags": [
+      "pace",
+      "new-ball"
+    ],
+    "overseas": false,
+    "setId": "S3"
+  },
+  {
+    "id": "arshdeep-singh",
+    "name": "Arshdeep Singh",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 84,
+    "tags": [
+      "pace",
+      "death-bowler",
+      "left-arm"
+    ],
+    "overseas": false,
+    "setId": "S3"
+  },
+  {
+    "id": "t-natarajan",
+    "name": "T Natarajan",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 81,
+    "tags": [
+      "pace",
+      "yorker",
+      "left-arm"
+    ],
+    "overseas": false,
+    "setId": "S3"
+  },
+  {
+    "id": "khaleel-ahmed",
+    "name": "Khaleel Ahmed",
+    "role": "BOWL",
+    "basePrice": 50,
+    "rating": 79,
+    "tags": [
+      "pace",
+      "left-arm",
+      "powerplay"
+    ],
+    "overseas": false,
+    "setId": "S3"
+  },
+  {
+    "id": "hardik-pandya",
+    "name": "Hardik Pandya",
+    "role": "AR",
+    "basePrice": 150,
+    "rating": 91,
+    "tags": [
+      "pace",
+      "finisher",
+      "captain"
+    ],
+    "overseas": false,
+    "setId": "S4"
+  },
+  {
+    "id": "ravindra-jadeja",
+    "name": "Ravindra Jadeja",
+    "role": "AR",
+    "basePrice": 150,
+    "rating": 90,
+    "tags": [
+      "spin",
+      "fielding",
+      "finisher"
+    ],
+    "overseas": false,
+    "setId": "S4"
+  },
+  {
+    "id": "sunil-narine",
+    "name": "Sunil Narine",
+    "role": "AR",
+    "basePrice": 150,
+    "rating": 92,
+    "tags": [
+      "spin",
+      "mystery",
+      "pinch-hitter"
+    ],
+    "overseas": true,
+    "setId": "S4"
+  },
+  {
+    "id": "glenn-maxwell",
+    "name": "Glenn Maxwell",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 86,
+    "tags": [
+      "spin",
+      "360",
+      "six-hitter"
+    ],
+    "overseas": true,
+    "setId": "S4"
+  },
+  {
+    "id": "cameron-green",
+    "name": "Cameron Green",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 87,
+    "tags": [
+      "pace",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S4"
+  },
+  {
+    "id": "axar-patel",
+    "name": "Axar Patel",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 85,
+    "tags": [
+      "spin",
+      "left-arm",
+      "promoter"
+    ],
+    "overseas": false,
+    "setId": "S4"
+  },
+  {
+    "id": "liam-livingstone",
+    "name": "Liam Livingstone",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 84,
+    "tags": [
+      "spin",
+      "six-hitter"
+    ],
+    "overseas": true,
+    "setId": "S4"
+  },
+  {
+    "id": "shivam-dube",
+    "name": "Shivam Dube",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 85,
+    "tags": [
+      "spin-hitter",
+      "six-hitter",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S4"
+  },
+  {
+    "id": "heinrich-klaasen",
+    "name": "Heinrich Klaasen",
+    "role": "WK",
+    "basePrice": 150,
+    "rating": 93,
+    "tags": [
+      "spin-hitter",
+      "finisher",
+      "six-hitter"
+    ],
+    "overseas": true,
+    "setId": "S5"
+  },
+  {
+    "id": "nicholas-pooran",
+    "name": "Nicholas Pooran",
+    "role": "WK",
+    "basePrice": 150,
+    "rating": 91,
+    "tags": [
+      "power-hitter",
+      "left-hand",
+      "360"
+    ],
+    "overseas": true,
+    "setId": "S5"
+  },
+  {
+    "id": "phil-salt",
+    "name": "Phil Salt",
+    "role": "WK",
+    "basePrice": 100,
+    "rating": 88,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S5"
+  },
+  {
+    "id": "quinton-de-kock",
+    "name": "Quinton de Kock",
+    "role": "WK",
+    "basePrice": 100,
+    "rating": 86,
+    "tags": [
+      "opener",
+      "left-hand"
+    ],
+    "overseas": true,
+    "setId": "S5"
+  },
+  {
+    "id": "sanju-samson",
+    "name": "Sanju Samson",
+    "role": "WK",
+    "basePrice": 100,
+    "rating": 87,
+    "tags": [
+      "elegant",
+      "captain"
+    ],
+    "overseas": false,
+    "setId": "S5"
+  },
+  {
+    "id": "ishan-kishan",
+    "name": "Ishan Kishan",
+    "role": "WK",
+    "basePrice": 75,
+    "rating": 84,
+    "tags": [
+      "opener",
+      "power-hitter",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S5"
+  },
+  {
+    "id": "rashid-khan",
+    "name": "Rashid Khan",
+    "role": "BOWL",
+    "basePrice": 150,
+    "rating": 95,
+    "tags": [
+      "spin",
+      "wrist-spin",
+      "death-overs"
+    ],
+    "overseas": true,
+    "setId": "S6"
+  },
+  {
+    "id": "varun-chakaravarthy",
+    "name": "Varun Chakaravarthy",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 89,
+    "tags": [
+      "spin",
+      "mystery"
+    ],
+    "overseas": false,
+    "setId": "S6"
+  },
+  {
+    "id": "kuldeep-yadav",
+    "name": "Kuldeep Yadav",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 88,
+    "tags": [
+      "spin",
+      "wrist-spin",
+      "left-arm"
+    ],
+    "overseas": false,
+    "setId": "S6"
+  },
+  {
+    "id": "wanindu-hasaranga",
+    "name": "Wanindu Hasaranga",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 87,
+    "tags": [
+      "spin",
+      "wrist-spin",
+      "wicket-taker"
+    ],
+    "overseas": true,
+    "setId": "S6"
+  },
+  {
+    "id": "yuzvendra-chahal",
+    "name": "Yuzvendra Chahal",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 84,
+    "tags": [
+      "spin",
+      "wrist-spin",
+      "wicket-taker"
+    ],
+    "overseas": false,
+    "setId": "S6"
+  },
+  {
+    "id": "ravichandran-ashwin",
+    "name": "Ravichandran Ashwin",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 85,
+    "tags": [
+      "spin",
+      "off-spin",
+      "tactician"
+    ],
+    "overseas": false,
+    "setId": "S6"
+  },
+  {
+    "id": "adam-zampa",
+    "name": "Adam Zampa",
+    "role": "BOWL",
+    "basePrice": 50,
+    "rating": 80,
+    "tags": [
+      "spin",
+      "wrist-spin"
+    ],
+    "overseas": true,
+    "setId": "S6"
+  },
+  {
+    "id": "faf-du-plessis",
+    "name": "Faf du Plessis",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 85,
+    "tags": [
+      "opener",
+      "anchor",
+      "captain"
+    ],
+    "overseas": true,
+    "setId": "S7"
+  },
+  {
+    "id": "steve-smith",
+    "name": "Steve Smith",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 82,
+    "tags": [
+      "anchor",
+      "technician"
+    ],
+    "overseas": true,
+    "setId": "S7"
+  },
+  {
+    "id": "rinku-singh",
+    "name": "Rinku Singh",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 86,
+    "tags": [
+      "finisher",
+      "six-hitter",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S7"
+  },
+  {
+    "id": "tilak-varma",
+    "name": "Tilak Varma",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 84,
+    "tags": [
+      "anchor",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S7"
+  },
+  {
+    "id": "sai-sudharsan",
+    "name": "Sai Sudharsan",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 85,
+    "tags": [
+      "anchor",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S7"
+  },
+  {
+    "id": "shimron-hetmyer",
+    "name": "Shimron Hetmyer",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 83,
+    "tags": [
+      "finisher",
+      "left-hand"
+    ],
+    "overseas": true,
+    "setId": "S7"
+  },
+  {
+    "id": "shikhar-dhawan",
+    "name": "Shikhar Dhawan",
+    "role": "BAT",
+    "basePrice": 50,
+    "rating": 79,
+    "tags": [
+      "opener",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S7"
+  },
+  {
+    "id": "ajinkya-rahane",
+    "name": "Ajinkya Rahane",
+    "role": "BAT",
+    "basePrice": 50,
+    "rating": 76,
+    "tags": [
+      "anchor",
+      "technician"
+    ],
+    "overseas": false,
+    "setId": "S7"
+  },
+  {
+    "id": "prithvi-shaw",
+    "name": "Prithvi Shaw",
+    "role": "BAT",
+    "basePrice": 30,
+    "rating": 74,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": false,
+    "setId": "S7"
+  },
+  {
+    "id": "josh-hazlewood",
+    "name": "Josh Hazlewood",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 88,
+    "tags": [
+      "pace",
+      "hard-length",
+      "new-ball"
+    ],
+    "overseas": true,
+    "setId": "S8"
+  },
+  {
+    "id": "trent-boult",
+    "name": "Trent Boult",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 87,
+    "tags": [
+      "pace",
+      "swing",
+      "left-arm",
+      "new-ball"
+    ],
+    "overseas": true,
+    "setId": "S8"
+  },
+  {
+    "id": "matheesha-pathirana",
+    "name": "Matheesha Pathirana",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 86,
+    "tags": [
+      "pace",
+      "sling",
+      "death-bowler"
+    ],
+    "overseas": true,
+    "setId": "S8"
+  },
+  {
+    "id": "anrich-nortje",
+    "name": "Anrich Nortje",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 84,
+    "tags": [
+      "pace",
+      "express"
+    ],
+    "overseas": true,
+    "setId": "S8"
+  },
+  {
+    "id": "bhuvneshwar-kumar",
+    "name": "Bhuvneshwar Kumar",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 83,
+    "tags": [
+      "pace",
+      "swing",
+      "new-ball"
+    ],
+    "overseas": false,
+    "setId": "S8"
+  },
+  {
+    "id": "harshal-patel",
+    "name": "Harshal Patel",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 82,
+    "tags": [
+      "pace",
+      "slower-ball",
+      "death-bowler"
+    ],
+    "overseas": false,
+    "setId": "S8"
+  },
+  {
+    "id": "prasidh-krishna",
+    "name": "Prasidh Krishna",
+    "role": "BOWL",
+    "basePrice": 50,
+    "rating": 80,
+    "tags": [
+      "pace",
+      "bounce"
+    ],
+    "overseas": false,
+    "setId": "S8"
+  },
+  {
+    "id": "deepak-chahar",
+    "name": "Deepak Chahar",
+    "role": "BOWL",
+    "basePrice": 50,
+    "rating": 78,
+    "tags": [
+      "pace",
+      "swing",
+      "powerplay"
+    ],
+    "overseas": false,
+    "setId": "S8"
+  },
+  {
+    "id": "avesh-khan",
+    "name": "Avesh Khan",
+    "role": "BOWL",
+    "basePrice": 30,
+    "rating": 76,
+    "tags": [
+      "pace",
+      "death-bowler"
+    ],
+    "overseas": false,
+    "setId": "S8"
+  },
+  {
+    "id": "mitchell-marsh",
+    "name": "Mitchell Marsh",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 87,
+    "tags": [
+      "pace",
+      "power-hitter",
+      "opener"
+    ],
+    "overseas": true,
+    "setId": "S9"
+  },
+  {
+    "id": "sam-curran",
+    "name": "Sam Curran",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 85,
+    "tags": [
+      "pace",
+      "left-arm",
+      "finisher"
+    ],
+    "overseas": true,
+    "setId": "S9"
+  },
+  {
+    "id": "moeen-ali",
+    "name": "Moeen Ali",
+    "role": "AR",
+    "basePrice": 75,
+    "rating": 82,
+    "tags": [
+      "spin",
+      "left-hand",
+      "opener"
+    ],
+    "overseas": true,
+    "setId": "S9"
+  },
+  {
+    "id": "venkatesh-iyer",
+    "name": "Venkatesh Iyer",
+    "role": "AR",
+    "basePrice": 75,
+    "rating": 81,
+    "tags": [
+      "pace",
+      "opener",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S9"
+  },
+  {
+    "id": "nitish-kumar-reddy",
+    "name": "Nitish Kumar Reddy",
+    "role": "AR",
+    "basePrice": 75,
+    "rating": 83,
+    "tags": [
+      "pace",
+      "power-hitter"
+    ],
+    "overseas": false,
+    "setId": "S9"
+  },
+  {
+    "id": "washington-sundar",
+    "name": "Washington Sundar",
+    "role": "AR",
+    "basePrice": 50,
+    "rating": 80,
+    "tags": [
+      "spin",
+      "off-spin",
+      "powerplay"
+    ],
+    "overseas": false,
+    "setId": "S9"
+  },
+  {
+    "id": "shardul-thakur",
+    "name": "Shardul Thakur",
+    "role": "AR",
+    "basePrice": 50,
+    "rating": 78,
+    "tags": [
+      "pace",
+      "golden-arm"
+    ],
+    "overseas": false,
+    "setId": "S9"
+  },
+  {
+    "id": "krunal-pandya",
+    "name": "Krunal Pandya",
+    "role": "AR",
+    "basePrice": 50,
+    "rating": 79,
+    "tags": [
+      "spin",
+      "left-arm"
+    ],
+    "overseas": false,
+    "setId": "S9"
+  },
+  {
+    "id": "jonny-bairstow",
+    "name": "Jonny Bairstow",
+    "role": "WK",
+    "basePrice": 75,
+    "rating": 81,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S10"
+  },
+  {
+    "id": "rahmanullah-gurbaz",
+    "name": "Rahmanullah Gurbaz",
+    "role": "WK",
+    "basePrice": 50,
+    "rating": 80,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S10"
+  },
+  {
+    "id": "prabhsimran-singh",
+    "name": "Prabhsimran Singh",
+    "role": "WK",
+    "basePrice": 30,
+    "rating": 76,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": false,
+    "setId": "S10"
+  },
+  {
+    "id": "dhruv-jurel",
+    "name": "Dhruv Jurel",
+    "role": "WK",
+    "basePrice": 30,
+    "rating": 75,
+    "tags": [
+      "finisher",
+      "fielding"
+    ],
+    "overseas": false,
+    "setId": "S10"
+  },
+  {
+    "id": "jitesh-sharma",
+    "name": "Jitesh Sharma",
+    "role": "WK",
+    "basePrice": 30,
+    "rating": 74,
+    "tags": [
+      "finisher",
+      "power-hitter"
+    ],
+    "overseas": false,
+    "setId": "S10"
+  },
+  {
+    "id": "ravi-bishnoi",
+    "name": "Ravi Bishnoi",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 83,
+    "tags": [
+      "spin",
+      "wrist-spin"
+    ],
+    "overseas": false,
+    "setId": "S11"
+  },
+  {
+    "id": "noor-ahmad",
+    "name": "Noor Ahmad",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 84,
+    "tags": [
+      "spin",
+      "wrist-spin",
+      "left-arm"
+    ],
+    "overseas": true,
+    "setId": "S11"
+  },
+  {
+    "id": "maheesha-theekshana",
+    "name": "Maheesha Theekshana",
+    "role": "BOWL",
+    "basePrice": 75,
+    "rating": 82,
+    "tags": [
+      "spin",
+      "mystery",
+      "off-spin"
+    ],
+    "overseas": true,
+    "setId": "S11"
+  },
+  {
+    "id": "rahul-chahar",
+    "name": "Rahul Chahar",
+    "role": "BOWL",
+    "basePrice": 30,
+    "rating": 75,
+    "tags": [
+      "spin",
+      "wrist-spin"
+    ],
+    "overseas": false,
+    "setId": "S11"
+  },
+  {
+    "id": "mayank-markande",
+    "name": "Mayank Markande",
+    "role": "BOWL",
+    "basePrice": 30,
+    "rating": 74,
+    "tags": [
+      "spin",
+      "wrist-spin"
+    ],
+    "overseas": false,
+    "setId": "S11"
+  },
+  {
+    "id": "suyash-sharma",
+    "name": "Suyash Sharma",
+    "role": "BOWL",
+    "basePrice": 30,
+    "rating": 73,
+    "tags": [
+      "spin",
+      "wrist-spin",
+      "mystery"
+    ],
+    "overseas": false,
+    "setId": "S11"
+  },
+  {
+    "id": "rajat-patidar",
+    "name": "Rajat Patidar",
+    "role": "BAT",
+    "basePrice": 50,
+    "rating": 81,
+    "tags": [
+      "anchor",
+      "spin-hitter"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "jake-fraser-mcgurk",
+    "name": "Jake Fraser-McGurk",
+    "role": "BAT",
+    "basePrice": 50,
+    "rating": 79,
+    "tags": [
+      "opener",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "S12"
+  },
+  {
+    "id": "tristan-stubbs",
+    "name": "Tristan Stubbs",
+    "role": "BAT",
+    "basePrice": 75,
+    "rating": 83,
+    "tags": [
+      "finisher",
+      "360"
+    ],
+    "overseas": true,
+    "setId": "S12"
+  },
+  {
+    "id": "abhishek-sharma",
+    "name": "Abhishek Sharma",
+    "role": "BAT",
+    "basePrice": 50,
+    "rating": 82,
+    "tags": [
+      "opener",
+      "six-hitter",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "riyan-parag",
+    "name": "Riyan Parag",
+    "role": "BAT",
+    "basePrice": 30,
+    "rating": 77,
+    "tags": [
+      "finisher",
+      "spin-hitter"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "angkrish-raghuvanshi",
+    "name": "Angkrish Raghuvanshi",
+    "role": "BAT",
+    "basePrice": 30,
+    "rating": 74,
+    "tags": [
+      "anchor",
+      "elegant"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "shashank-singh",
+    "name": "Shashank Singh",
+    "role": "BAT",
+    "basePrice": 30,
+    "rating": 76,
+    "tags": [
+      "finisher",
+      "spin-hitter"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "ashutosh-sharma",
+    "name": "Ashutosh Sharma",
+    "role": "BAT",
+    "basePrice": 30,
+    "rating": 75,
+    "tags": [
+      "finisher",
+      "six-hitter"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "rahul-tewatia",
+    "name": "Rahul Tewatia",
+    "role": "AR",
+    "basePrice": 50,
+    "rating": 78,
+    "tags": [
+      "finisher",
+      "spin",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "ramandeep-singh",
+    "name": "Ramandeep Singh",
+    "role": "AR",
+    "basePrice": 30,
+    "rating": 75,
+    "tags": [
+      "finisher",
+      "fielding"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "deepak-hooda",
+    "name": "Deepak Hooda",
+    "role": "AR",
+    "basePrice": 30,
+    "rating": 74,
+    "tags": [
+      "spin",
+      "power-hitter"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "abishek-porel",
+    "name": "Abishek Porel",
+    "role": "WK",
+    "basePrice": 30,
+    "rating": 76,
+    "tags": [
+      "opener",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "mayank-yadav",
+    "name": "Mayank Yadav",
+    "role": "BOWL",
+    "basePrice": 50,
+    "rating": 80,
+    "tags": [
+      "pace",
+      "express"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "harshit-rana",
+    "name": "Harshit Rana",
+    "role": "BOWL",
+    "basePrice": 50,
+    "rating": 78,
+    "tags": [
+      "pace",
+      "hard-length"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "umran-malik",
+    "name": "Umran Malik",
+    "role": "BOWL",
+    "basePrice": 30,
+    "rating": 77,
+    "tags": [
+      "pace",
+      "express"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  },
+  {
+    "id": "akash-deep",
+    "name": "Akash Deep",
+    "role": "BOWL",
+    "basePrice": 30,
+    "rating": 76,
+    "tags": [
+      "pace",
+      "seam"
+    ],
+    "overseas": false,
+    "setId": "S12"
+  }
+]

@@ -26,10 +26,10 @@ the first 60 seconds.
 ## 2. Goals / Non-goals
 
 **Goals (v0):**
-- Complete solo auction: 60-player pool, 4 franchises (1 human + 3 bots), full
-  auction loop, squad building, final scoring screen.
+- Complete solo auction: 100-player pool for 60 squad slots, 4 franchises
+  (1 human + 3 bots), full auction loop, squad building, final scoring screen.
 - Bot bidders with distinct personalities that feel intentional, not random.
-- Playable end-to-end in 10–15 minutes.
+- Playable end-to-end in ~15–20 minutes (no-interest lots resolve fast).
 - Deployable as a static site (no backend in v0).
 
 **Goals (v1):**
@@ -162,11 +162,17 @@ identically to the human's BID button and every bot.
 
 ## 6. Player data (Phase 0 deliverable)
 
-Create `src/data/players.json` with **60 real cricketers** spanning roles and
+Create `src/data/players.json` with **100 real cricketers** spanning roles and
 price tiers. Hand-write realistic entries (agent: use well-known players and
 plausible base prices/ratings; exact stat accuracy is NOT required, this is a
-game). Distribution: ~20 BAT, ~18 BOWL, ~12 AR, ~10 WK; ~20 overseas; base
-prices from 30L to 200L in tiers. Every player needs a `setId` per §7.
+game). Distribution: ~26 BAT, ~38 BOWL, ~21 AR, ~15 WK; ~38 overseas (real
+auction lists are bowler-heavy and ~40% overseas); base prices from 30L to
+200L in tiers. Every player needs a `setId` per §7.
+
+**Why 100 for 60 slots:** real auctions have a large surplus — most registered
+players go unsold. The surplus is what makes *passing* a viable strategy
+("someone cheaper is coming") instead of every lot being must-win. ~40 unsold
+players per game is correct behaviour, not a bug.
 
 ## 7. Auction format (what makes it feel live)
 
@@ -175,17 +181,25 @@ must too. This is a strategy mechanic, not decoration: knowing another batch of
 batters is still coming is exactly the "spend now or wait" tension in §1.
 
 ```
-Set 1  Marquee        6 players   (highest-rated, mixed roles)
-Set 2  Batters I      7
-Set 3  Fast Bowlers I 7
-Set 4  All-Rounders I 6
-Set 5  Wicketkeepers  5
-Set 6  Spinners       5
-Set 7  Batters II     7
-Set 8  Fast Bowlers II 7
-Set 9  All-Rounders II 6
-Set 10 Uncapped/Rest  4
+Set 1   Marquee          8 players   (highest-rated, mixed roles)
+Set 2   Batters I        9
+Set 3   Fast Bowlers I   9
+Set 4   All-Rounders I   8
+Set 5   Wicketkeepers I  6
+Set 6   Spinners I       7
+Set 7   Batters II       9
+Set 8   Fast Bowlers II  9
+Set 9   All-Rounders II  8
+Set 10  Wicketkeepers II 5
+Set 11  Spinners II      6
+Set 12  Uncapped & Rest  16
 ```
+
+**End condition.** The auction ends when every squad is full or the pool is
+exhausted. With 100 players for 60 slots, ~40 going unsold is normal.
+
+**Pacing.** A lot that attracts no opening bid resolves in 4 ticks instead of
+10 — no-interest players must not drag the game.
 
 Players shuffle *within* a set (seeded); set order is fixed. Announce each set
 transition on screen — it's a natural breathing point.
@@ -199,7 +213,7 @@ at lobby). When bidding closes:
 
 RTM respects budget and soft-lock rules exactly like a normal bid.
 
-**Accelerated round.** After Set 10, unsold players whose roles are still
+**Accelerated round.** After Set 12, unsold players whose roles are still
 mandatory-unfilled for any franchise come back once, on a 6-second timer.
 
 **Auctioneer (Phase 4).** Web Speech API calls the numbers — "two crore twenty
@@ -261,14 +275,15 @@ stay visible at all times — the broadcast "big board" look.
 ## 10. Build phases & acceptance gates
 
 **Phase 0 — Skeleton + data.** Vite + React + TS + Tailwind scaffold;
-players.json (60 players, with setIds); types file; Zustand store with
+players.json (100 players, with setIds); types file; Zustand store with
 AuctionState; deploy pipeline live with a placeholder page.
-✅ Gate: `npm run dev` renders a page listing all 60 players from JSON, and the
-Cloudflare Pages URL serves the same build.
+✅ Gate: `npm run dev` renders a page listing all 100 players from JSON, and
+the Cloudflare Pages URL serves the same build.
 
 **Phase 1 — Auction engine (no UI polish).** Pure-TS reducer: seeded RNG, set
 construction and within-set shuffling, bid validation, increments, timer via
-TICK, sold/unsold transitions, RTM flow, accelerated round, squad rule
+TICK, sold/unsold transitions, no-bid fast resolution, end condition (all
+squads full or pool exhausted), RTM flow, accelerated round, squad rule
 enforcement. Vitest tests for: bid increment ladder, soft-lock prevention,
 squad validation, RTM resolution paths, full simulated auction with 4 random
 bidders completing without errors.
