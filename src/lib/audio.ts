@@ -243,6 +243,17 @@ export function crowdSwell(intensity = 1): void {
 // ------------------------------------------------------------- auctioneer
 
 let voice: SpeechSynthesisVoice | null | undefined;
+let englishVoices: SpeechSynthesisVoice[] | null = null;
+
+function allEnglish(): SpeechSynthesisVoice[] {
+  const synth = window.speechSynthesis;
+  if (!synth) return [];
+  if (englishVoices && englishVoices.length) return englishVoices;
+  const voices = synth.getVoices();
+  const en = voices.filter((v) => v.lang.replace("_", "-").toLowerCase().startsWith("en"));
+  englishVoices = en.length ? en : voices;
+  return englishVoices;
+}
 
 function pickVoice(): SpeechSynthesisVoice | null {
   const synth = window.speechSynthesis;
@@ -257,7 +268,8 @@ function pickVoice(): SpeechSynthesisVoice | null {
   );
 }
 
-export function speak(text: string, interrupt = true, pitch = 1, rate = 1.05): void {
+/** The auctioneer: authoritative, a touch lower and slower than default. */
+export function speak(text: string, interrupt = true, pitch = 0.92, rate = 1.04): void {
   try {
     const synth = window.speechSynthesis;
     if (!synth) return;
@@ -267,9 +279,54 @@ export function speak(text: string, interrupt = true, pitch = 1, rate = 1.05): v
     if (voice) u.voice = voice;
     u.rate = rate;
     u.pitch = pitch;
+    u.volume = 1;
     synth.speak(u);
   } catch {
     /* no speech support — silently fine */
+  }
+}
+
+// --------------------------------------------------------- team voices
+
+/** A per-franchise voice: a different system voice where the OS offers one,
+ * otherwise a distinct pitch/rate pairing, so the eight tables sound like
+ * eight different rooms of people. */
+export interface TeamVoice {
+  pitch: number;
+  rate: number;
+  voiceIndex: number;
+}
+
+export function teamVoice(index: number): TeamVoice {
+  // spread pitch/rate widely; indices wrap over whatever voices exist
+  const pitches = [1.28, 0.78, 1.12, 0.88, 1.35, 0.7, 1.05, 0.95];
+  const rates = [1.18, 0.94, 1.25, 1.02, 1.1, 0.9, 1.3, 1.06];
+  return { pitch: pitches[index % 8], rate: rates[index % 8], voiceIndex: index };
+}
+
+let lastTeamCall = 0;
+
+/**
+ * A franchise shouts something — their own bid, a reaction. Kept short and
+ * rate-limited so it interjects around the auctioneer instead of burying him.
+ * Never interrupts: these queue behind whatever the host is saying.
+ */
+export function speakTeam(text: string, v: TeamVoice, minGapMs = 1500): void {
+  try {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    const now = Date.now();
+    if (now - lastTeamCall < minGapMs) return;
+    lastTeamCall = now;
+    const u = new SpeechSynthesisUtterance(text);
+    const pool = allEnglish();
+    if (pool.length) u.voice = pool[v.voiceIndex % pool.length];
+    u.pitch = v.pitch;
+    u.rate = v.rate;
+    u.volume = 0.85;
+    synth.speak(u);
+  } catch {
+    /* ignore */
   }
 }
 

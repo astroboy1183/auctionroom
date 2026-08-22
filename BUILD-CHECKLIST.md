@@ -107,6 +107,10 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 - [x] Broadcast-overlay layout: edge-hugging UI, hall visible in the centre (D-016)
 - [x] Hall polish: standing auctioneer, spotlight cone, framed screen, stage lip
 - [x] Audio rebuilt on a convolution-reverb bus; struck-tone cues (D-015)
+- [x] Live jumbotron on the board behind the host (D-017)
+- [x] 16 seated bidders — two per bench in team colours, lean in when leading
+- [x] Host speaks more: marquee callouts, set intros, colour commentary
+- [x] Eight franchise voices calling their own bids (D-018)
 - [ ] **GATE 🧑:** play a full 8-team auction in the 3D hall with sound on
 
 ## Phase 6 (v2) — Multiplayer

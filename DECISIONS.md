@@ -5,6 +5,32 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-018 — Franchise voices: the benches call their own bids
+**v1, 2026-08-21.** Each of the 8 franchises gets a distinct speaking voice —
+a different system voice where the OS provides several, plus a distinct
+pitch/rate pairing as the fallback — so the room sounds like eight sets of
+people rather than one narrator. Bots call short lines when they bid ("Two
+crore!", "We're in.", "Still here."), shout "Got him!" on a win, and claim
+"He's one of ours" when triggering RTM.
+**Collision handling:** team lines never interrupt (they queue behind the
+auctioneer) and are rate-limited to one per 1.5s, so they interject around the
+host instead of burying him. The auctioneer himself got a lower pitch (0.92),
+marquee-player callouts, and occasional colour commentary during long wars
+(max one per 9s).
+
+## D-017 — The jumbotron is a canvas texture, not 3D text
+**v1, 2026-08-21.** The board behind the auctioneer now shows live auction
+data — set name, player name, role, star rating, tags, standing bid and the
+leading franchise in its own colour, plus dedicated SOLD and UNSOLD states.
+It is drawn with the ordinary 2D canvas API into a `THREE.CanvasTexture`,
+**not** drei's `<Text>`: that would require fetching a font file, which breaks
+the no-external-assets rule (D-013). Canvas also gives full typographic
+control and costs one texture upload per state change, not per frame.
+**Layout constraint worth remembering:** the auctioneer stands in front of the
+lower-centre of this board, so the money block is right-aligned in the right
+column and the name sits in the upper band. Anything readable placed at
+canvas x 470–770, y > 300 will be hidden behind his head.
+
 ## D-016 — Broadcast-overlay layout: the centre of the screen belongs to the hall
 **v1 polish, 2026-08-21.** First 3D pass kept the v0 2D layout (big centred
 player card, wide franchise panel column, centred bid button) and it buried the
