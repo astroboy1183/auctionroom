@@ -69,7 +69,10 @@ export function adjustedEstimate(state: AuctionState, franchise: Franchise, play
 
 // ---------------------------------------------------------------- bidding
 
-export type BotMove = "bid" | "pass" | null;
+// Bots never PASS: passing is now binding for the whole lot (D-019), and a
+// bot that locked itself out at the opening price could not come back when
+// the player turned out to be its last chance at a mandatory role.
+export type BotMove = "bid" | null;
 
 /**
  * One bot's decision for the current tick of an open lot.
@@ -83,10 +86,9 @@ export function botAction(state: AuctionState, franchiseId: string, rng: Rng): [
   if (state.currentBidderId === franchiseId || state.passed.includes(franchiseId))
     return [null, rng];
 
-  if (!canBid(state, franchiseId).ok) {
-    // Can't legally bid this lot at this price — declare out (helps pacing).
-    return ["pass", rng];
-  }
+  // Can't legally bid at this price — sit quietly; everyoneElseOut() in the
+  // reducer already treats "cannot bid" as being out of the lot.
+  if (!canBid(state, franchiseId).ok) return [null, rng];
 
   const p = franchise.botPersonality;
   const player = state.currentPlayer;
@@ -100,7 +102,7 @@ export function botAction(state: AuctionState, franchiseId: string, rng: Rng): [
   const supply = remainingPool(state).filter((x) => x.role === player.role).length;
   const desperate = deficit > 0 && supply <= deficit;
 
-  if (!desperate && amount > estimate) return ["pass", rng]; // price left our number
+  if (!desperate && amount > estimate) return [null, rng]; // price left our number
 
   // Patience gates entry: patient bots lurk before they even consider acting.
   // A desperate bot has no patience left.

@@ -8,7 +8,9 @@ import { botAction, botRtmMatch, botRtmRaise, botRtmUseCard } from "../engine/bo
 import { shuffle, seedRng, type Rng } from "../engine/rng";
 
 const TICK_MS = 1000;
+const SKIP_TICK_MS = 130; // fast-forward when the human skips a lot
 const BOT_CYCLE_MS = 420;
+const SKIP_BOT_CYCLE_MS = 70;
 const RTM_SUSPENSE_MS = 1100;
 const SOLD_BANNER_MS = 1900;
 const UNSOLD_BANNER_MS = 1100;
@@ -18,11 +20,14 @@ export function useAuctionDriver() {
   const rngRef = useRef<Rng>(seedRng(Date.now() >>> 0));
 
   // Clock + bot bidding while a lot is open.
+  const skipping = useGameStore((s) => s.skipping);
   useEffect(() => {
     if (phase !== "bidding") return;
+    // Skipping doesn't change the auction — only how fast we feed it time,
+    // so bots still fight it out, just at speed.
     const tick = setInterval(() => {
       useGameStore.getState().dispatch({ type: "TICK" });
-    }, TICK_MS);
+    }, skipping ? SKIP_TICK_MS : TICK_MS);
     const bots = setInterval(() => {
       const { auction, dispatch } = useGameStore.getState();
       if (auction.phase !== "bidding") return;
@@ -36,14 +41,13 @@ export function useAuctionDriver() {
           dispatch({ type: "BID", franchiseId: f.id });
           break; // one bid per cycle keeps the war readable
         }
-        if (move === "pass") dispatch({ type: "PASS", franchiseId: f.id });
       }
-    }, BOT_CYCLE_MS);
+    }, skipping ? SKIP_BOT_CYCLE_MS : BOT_CYCLE_MS);
     return () => {
       clearInterval(tick);
       clearInterval(bots);
     };
-  }, [phase]);
+  }, [phase, skipping]);
 
   // Bot-side RTM stages resolve after a beat; human stages wait for the modal.
   const rtmStage = useGameStore((s) => s.auction.rtmOffer?.stage);
@@ -75,9 +79,13 @@ export function useAuctionDriver() {
   // Sold/unsold interstitials auto-advance.
   useEffect(() => {
     if (phase !== "sold" && phase !== "unsold") return;
+    const { skipping: fast, setSkipping } = useGameStore.getState();
     const t = setTimeout(
-      () => useGameStore.getState().dispatch({ type: "NEXT_PLAYER" }),
-      phase === "sold" ? SOLD_BANNER_MS : UNSOLD_BANNER_MS,
+      () => {
+        setSkipping(false); // the skip ends with the lot
+        useGameStore.getState().dispatch({ type: "NEXT_PLAYER" });
+      },
+      fast ? 450 : phase === "sold" ? SOLD_BANNER_MS : UNSOLD_BANNER_MS,
     );
     return () => clearTimeout(t);
   }, [phase]);

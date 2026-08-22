@@ -20,11 +20,13 @@ export default function BidTicker({ auction }: { auction: AuctionState }) {
             initial={{ opacity: 0, x: -14 }}
             animate={{ opacity: i === 0 ? 1 : 0.55, x: 0 }}
             exit={{ opacity: 0 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 whitespace-nowrap"
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: color(b.franchiseId) }} />
-            <span className="text-slate-300">{name(b.franchiseId)}</span>
-            <span className="ml-auto font-mono font-bold text-slate-100">{money(b.amount)}</span>
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: color(b.franchiseId) }} />
+            <span className="truncate text-slate-300">{name(b.franchiseId)}</span>
+            <span className="ml-auto shrink-0 whitespace-nowrap font-mono font-bold text-slate-100">
+              {money(b.amount)}
+            </span>
           </motion.div>
         ))}
       </AnimatePresence>

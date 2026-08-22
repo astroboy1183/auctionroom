@@ -5,6 +5,38 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-021 — Player likenesses are generated, never photographs
+**v1, 2026-08-21.** The jumbotron shows a stylised head-and-shoulders portrait
+per cricketer: skin tone, kit colour, hair, beard and headgear are all derived
+from a hash of the player id (so a given player always looks the same), plus a
+bat or ball prop by role and a ✈ mark for overseas players.
+**Why not real photos:** press images of active cricketers are rights-encumbered
+and this is a public, shareable build; separately, the hall is deliberately
+asset-free and offline (D-013), so there is nowhere to fetch them from. A
+generated likeness gives each lot a face without either problem.
+
+## D-020 — Skip fast-forwards time, it does not skip the auction
+**v1, 2026-08-21.** The ⏩ button passes on the player *and* speeds the driver
+up (1000ms → 130ms ticks, bot cycles 420ms → 70ms, interstitials to 450ms)
+until the lot resolves, then clears itself.
+**Why this shape:** the engine is untouched — bots still fight the lot out at
+full fidelity and the result is identical, you just watch it at speed. Skipping
+by jumping the pool index would have changed who won what, which would make
+the human's convenience button alter the auction.
+
+## D-019 — Passing is binding for the whole lot
+**v1, 2026-08-21.** `passed` used to clear on every new bid, so the human's
+Pass was erased the instant anyone bid — the button visibly did nothing.
+Passing now sits you out until the next player, `canBid` rejects a franchise
+that passed, and the HUD says "You're out of this lot".
+**Consequence for bots:** they no longer emit PASS at all. A bot that locked
+itself out at the opening price could not return when the player turned out to
+be its last chance at a mandatory role, which broke the desperation override
+(D-014). They simply stay quiet instead; `everyoneElseOut()` already treats
+"cannot legally bid" as being out, so dead lots still close early.
+**Measured after:** normal difficulty 90/96 squads complete, avg ₹10 Cr —
+unchanged from before the switch.
+
 ## D-018 — Franchise voices: the benches call their own bids
 **v1, 2026-08-21.** Each of the 8 franchises gets a distinct speaking voice —
 a different system voice where the OS provides several, plus a distinct

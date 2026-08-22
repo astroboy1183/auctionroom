@@ -132,7 +132,8 @@ export function applyEvent(state: AuctionState, event: AuctionEvent): AuctionSta
           { franchiseId: event.franchiseId, amount, playerId: state.currentPlayer!.id },
         ],
         timer: lotSeconds(state.accelerated), // every bid resets the clock
-        passed: [], // a new price reopens everyone's decision
+        // `passed` is NOT cleared: passing is a commitment to sit this lot
+        // out, not a per-price opinion. It clears on NEXT_PLAYER.
       };
     }
 
@@ -140,6 +141,7 @@ export function applyEvent(state: AuctionState, event: AuctionEvent): AuctionSta
       if (state.phase !== "bidding") return state;
       if (event.franchiseId === state.currentBidderId) return state; // leader is committed
       if (state.passed.includes(event.franchiseId)) return state;
+      // Out for the rest of this lot — cannot re-enter at a higher price.
       const next = { ...state, passed: [...state.passed, event.franchiseId] };
       return everyoneElseOut(next) ? resolveLot(next) : next;
     }

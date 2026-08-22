@@ -4,6 +4,7 @@
 import { motion } from "motion/react";
 import type { Player, Role } from "../engine/types";
 import { money } from "./format";
+import Stars from "./Stars";
 
 const ROLE_LABEL: Record<Role, string> = {
   BAT: "Batter", BOWL: "Bowler", AR: "All-Rounder", WK: "Keeper",
@@ -11,15 +12,6 @@ const ROLE_LABEL: Record<Role, string> = {
 const ROLE_COLOR: Record<Role, string> = {
   BAT: "#f59e0b", BOWL: "#38bdf8", AR: "#34d399", WK: "#e879f9",
 };
-
-function Stars({ rating }: { rating: number }) {
-  const stars = Math.round(((rating - 60) / 40) * 5 * 2) / 2;
-  return (
-    <span className="text-amber-400" title={`rating ${rating}`}>
-      {Array.from({ length: 5 }, (_, i) => (stars >= i + 1 ? "★" : stars >= i + 0.5 ? "⯨" : "☆")).join("")}
-    </span>
-  );
-}
 
 export default function LowerThird({ player }: { player: Player }) {
   return (

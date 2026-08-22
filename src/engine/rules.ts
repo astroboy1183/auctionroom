@@ -99,6 +99,8 @@ export function canBid(state: AuctionState, franchiseId: string): RuleCheck {
     return { ok: false, reason: "not in bidding phase" };
   if (state.currentBidderId === franchiseId)
     return { ok: false, reason: "already the highest bidder" };
+  if (state.passed.includes(franchiseId))
+    return { ok: false, reason: "passed on this player" };
   const franchise = state.franchises.find((f) => f.id === franchiseId);
   if (!franchise) return { ok: false, reason: "unknown franchise" };
   const amount = nextBidAmount(state.currentBid, state.currentPlayer.basePrice);

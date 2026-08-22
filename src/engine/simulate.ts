@@ -144,8 +144,7 @@ export function simulateBotAuction(players: Player[], seed: number, difficulty =
             acted = true;
             break;
           }
-          if (move === "pass") state = applyEvent(state, { type: "PASS", franchiseId: f.id });
-          if (state.phase !== "bidding") { acted = true; break; } // pass closed the lot
+          if (state.phase !== "bidding") { acted = true; break; }
         }
         if (!acted && state.phase === "bidding") state = applyEvent(state, { type: "TICK" });
         break;

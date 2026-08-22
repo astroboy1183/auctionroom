@@ -31,6 +31,8 @@ export default function AuctionFloor() {
   const toggleSound = useGameStore((s) => s.toggleSound);
   const view3d = useGameStore((s) => s.view3d);
   const toggleView3d = useGameStore((s) => s.toggleView3d);
+  const skipping = useGameStore((s) => s.skipping);
+  const setSkipping = useGameStore((s) => s.setSkipping);
   const [squadOpen, setSquadOpen] = useState(false);
 
   const player = auction.currentPlayer;
@@ -128,7 +130,7 @@ export default function AuctionFloor() {
       </div>
 
       {/* ---- right: recent bids ---- */}
-      <div className="pointer-events-none fixed right-3 top-16 z-20 hidden w-[190px] rounded-lg bg-slate-950/55 p-2.5 backdrop-blur-md lg:block">
+      <div className="pointer-events-none fixed right-3 top-16 z-20 hidden w-[238px] rounded-lg bg-slate-950/55 p-2.5 backdrop-blur-md lg:block">
         <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-500">Bidding</p>
         <BidTicker auction={auction} />
       </div>
@@ -146,8 +148,14 @@ export default function AuctionFloor() {
           bidBlockedReason={bidCheck.reason === "not in bidding phase" ? "…" : bidCheck.reason}
           nextAmount={nextAmount}
           humanPassed={auction.passed.includes(humanId)}
+          skipping={skipping}
           onBid={() => dispatch({ type: "BID", franchiseId: humanId })}
           onPass={() => { whoosh(); dispatch({ type: "PASS", franchiseId: humanId }); }}
+          onSkip={() => {
+            whoosh();
+            dispatch({ type: "PASS", franchiseId: humanId });
+            setSkipping(true);
+          }}
         />
       </div>
 

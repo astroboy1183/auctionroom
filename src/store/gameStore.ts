@@ -21,10 +21,12 @@ interface GameStore {
   difficulty: Difficulty;
   soundOn: boolean;
   view3d: boolean;
+  skipping: boolean;
   dispatch: (event: AuctionEvent) => void;
   startGame: (humanId: string, difficulty: Difficulty) => void;
   toggleSound: () => void;
   toggleView3d: () => void;
+  setSkipping: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -36,6 +38,7 @@ export const useGameStore = create<GameStore>((set) => ({
   difficulty: "normal",
   soundOn: true,
   view3d: true,
+  skipping: false,
   dispatch: (event) => set((s) => ({ auction: applyEvent(s.auction, event) })),
   startGame: (humanId, difficulty) =>
     set(() => {
@@ -46,9 +49,10 @@ export const useGameStore = create<GameStore>((set) => ({
       franchises = attachBotPersonalities(franchises, DIFFICULTY_MULT[difficulty], seed + 2);
       franchises = assignFormerPlayers(franchises, players, seed + 1);
       const lobby = createInitialState(players, franchises);
-      return { humanId, difficulty, auction: applyEvent(lobby, { type: "START", seed }) };
+      return { humanId, difficulty, skipping: false, auction: applyEvent(lobby, { type: "START", seed }) };
     }),
   toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
   toggleView3d: () => set((s) => ({ view3d: !s.view3d })),
+  setSkipping: (v) => set({ skipping: v }),
   reset: () => set({ auction: fresh() }),
 }));

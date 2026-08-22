@@ -67,7 +67,7 @@ describe("bidding behaviour", () => {
     expect(sharkMoves).toContain("bid");
   });
 
-  it("bots pass when the price leaves their number", () => {
+  it("bots go quiet when the price leaves their number (they never PASS)", () => {
     const franchises = bottedFranchises();
     const cheap = allPlayers.find((p) => p.rating <= 75)!;
     const supply = Array.from({ length: 6 }, () => player({ role: cheap.role }));
@@ -80,7 +80,7 @@ describe("bidding behaviour", () => {
       timer: 3,
     });
     for (const f of franchises.filter((x) => x.id !== "hyd")) {
-      expect(botAction(state, f.id, 1)[0]).toBe("pass");
+      expect(botAction(state, f.id, 1)[0]).toBeNull();
     }
   });
 });

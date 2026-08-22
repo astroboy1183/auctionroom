@@ -15,12 +15,15 @@ interface Props {
   bidBlockedReason?: string;
   nextAmount: number;
   humanPassed: boolean;
+  skipping: boolean;
   onBid: () => void;
   onPass: () => void;
+  onSkip: () => void;
 }
 
 export default function BidHud({
-  auction, humanId, lotLen, canBidNow, bidBlockedReason, nextAmount, humanPassed, onBid, onPass,
+  auction, humanId, lotLen, canBidNow, bidBlockedReason, nextAmount, humanPassed, skipping,
+  onBid, onPass, onSkip,
 }: Props) {
   const leader = auction.franchises.find((f) => f.id === auction.currentBidderId);
   const leading = auction.currentBidderId === humanId;
@@ -48,7 +51,7 @@ export default function BidHud({
         </div>
       </div>
 
-      <div className="mt-2.5 grid grid-cols-[1fr_auto] gap-2">
+      <div className="mt-2.5 grid grid-cols-[1fr_auto_auto] gap-2">
         <motion.button
           whileTap={{ scale: 0.96 }}
           disabled={!canBidNow}
@@ -60,11 +63,26 @@ export default function BidHud({
         <button
           disabled={humanPassed || leading}
           onClick={onPass}
-          className="rounded-lg border border-slate-700/80 px-4 font-bold text-slate-300 enabled:hover:bg-slate-800/70 disabled:opacity-35"
+          title="Sit this player out — you can't re-enter the bidding"
+          className="rounded-lg border border-slate-700/80 px-3.5 text-sm font-bold text-slate-300 enabled:hover:bg-slate-800/70 disabled:opacity-35"
         >
-          {humanPassed ? "Out" : "Pass"}
+          {humanPassed ? "Out ✓" : "Pass"}
         </button>
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          disabled={leading || skipping}
+          onClick={onSkip}
+          title="Skip: sit out and fast-forward to the result"
+          className="rounded-lg border border-slate-700/80 px-3 text-sm font-bold text-slate-400 enabled:hover:bg-slate-800/70 disabled:opacity-35"
+        >
+          {skipping ? "⏩…" : "⏩"}
+        </motion.button>
       </div>
+      {humanPassed && !skipping && (
+        <p className="mt-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+          You're out of this lot
+        </p>
+      )}
     </div>
   );
 }

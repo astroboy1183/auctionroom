@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { applyEvent, LOT_SECONDS, NO_BID_TICKS } from "../src/engine/auction";
 import { simulateRandomAuction } from "../src/engine/simulate";
-import { SQUAD_MAX, OVERSEAS_MAX, overseasCount } from "../src/engine/rules";
+import { SQUAD_MAX, OVERSEAS_MAX, overseasCount, canBid } from "../src/engine/rules";
 import { biddingState, player } from "./helpers";
 import playersJson from "../src/data/players.json";
 import type { Player } from "../src/engine/types";
@@ -41,11 +41,18 @@ describe("lot lifecycle", () => {
     expect(s.phase).toBe("sold");
   });
 
-  it("a new bid clears earlier passes", () => {
-    let s = biddingState();
+  it("passing is binding for the whole lot, even after a new bid", () => {
+    const a = player({ role: "BAT" });
+    const b = player({ role: "BOWL" });
+    let s = biddingState({ currentPlayer: a, pool: [a, b] });
     s = applyEvent(s, { type: "BID", franchiseId: "mum" });
     s = applyEvent(s, { type: "PASS", franchiseId: "hyd" });
     s = applyEvent(s, { type: "BID", franchiseId: "del" });
+    expect(s.passed).toContain("hyd");
+    expect(canBid(s, "hyd").ok).toBe(false);
+    // …and clears when the next player comes up
+    s = { ...s, phase: "sold" as const };
+    s = applyEvent(s, { type: "NEXT_PLAYER" });
     expect(s.passed).toEqual([]);
   });
 
