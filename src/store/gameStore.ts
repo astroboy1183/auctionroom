@@ -30,6 +30,7 @@ interface GameStore {
   toggleView3d: () => void;
   setSkipping: (v: boolean) => void;
   flagOutbid: (by: string, color: string) => void;
+  clearOutbid: () => void;
   reset: () => void;
 }
 
@@ -59,5 +60,8 @@ export const useGameStore = create<GameStore>((set) => ({
   toggleView3d: () => set((s) => ({ view3d: !s.view3d })),
   setSkipping: (v) => set({ skipping: v }),
   flagOutbid: (by, color) => set({ outbid: { by, color, at: Date.now() } }),
-  reset: () => set({ auction: fresh() }),
+  clearOutbid: () => set({ outbid: null }),
+  // Must clear transient per-lot UI state too, or "Play again" can start the
+  // next auction still in fast-forward.
+  reset: () => set({ auction: fresh(), skipping: false, outbid: null }),
 }));

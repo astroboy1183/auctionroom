@@ -11,6 +11,7 @@ if (import.meta.env.DEV) {
   import("./store/gameStore").then(({ useGameStore }) => {
     import("./engine/simulate").then(({ simulateBotAuction }) => {
       import("./data/players.json").then((players) => {
+        (window as unknown as Record<string, unknown>).__store = () => useGameStore.getState();
         (window as unknown as Record<string, unknown>).__ff = () => {
           const { state } = simulateBotAuction(players.default as never, 42);
           useGameStore.setState({ auction: state });

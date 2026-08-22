@@ -5,6 +5,36 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-023 — Bug sweep after the polish pass
+**v1, 2026-08-21.** Four defects found by driving the built app headlessly
+rather than by reading the diff.
+
+1. **`reset()` leaked per-lot UI state.** "Play again" kept `skipping` and
+   `outbid`, so a new auction could start stuck in fast-forward (130ms ticks).
+   Reset now clears both.
+2. **The outbid cue returned early**, skipping the crowd swell and the
+   auctioneer's big-money call — so the room fell silent at exactly the moment
+   it should react hardest (a rival taking a ₹9 Cr player off you). The cue now
+   replaces only the bid knock; everything downstream still runs.
+3. **The rail shake remounted the component.** Driving it with a changing
+   `key` restarted the inner leading-state spring, so the entry visibly popped
+   on every outbid *and* again when the alert expired. Replaced with
+   `useAnimationControls` fired from an effect — no remount.
+4. **The alert could hang on screen.** Visibility was computed from
+   `Date.now()` at render with nothing scheduled to re-render it; during `rtm`
+   and `sold` there are no TICKs, so it only cleared on the next state change.
+   It now clears itself on a timer.
+
+Also fixed the same day: hardcoded `"of 4"` and `"12/15"` on the results
+screen, left from the 4-team era, and the dead `FranchisePanel.tsx` carrying a
+stale `/6` overseas cap.
+
+**Verification:** 45 tests green, `FULL_SIM=1` 1000/1000 auctions valid (931s),
+a 35-lot headless playthrough mixing bid/pass/skip with zero console errors,
+and the outbid path confirmed end-to-end (toast fires, auto-clears).
+**Known non-issue:** three.js logs "THREE.Clock deprecated, use THREE.Timer" —
+that comes from inside `@react-three/fiber`, not our code.
+
 ## D-022 — Visual polish pass: the eight-point review
 **v1, 2026-08-21.** Worked through a visual review in three groups.
 

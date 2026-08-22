@@ -1,7 +1,7 @@
 // The main screen, laid out as a broadcast overlay: every control hugs an
 // edge so the middle of the frame belongs to the 3D auction hall.
 
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { useAuctionDriver } from "../hooks/useAuctionDriver";
@@ -34,8 +34,13 @@ export default function AuctionFloor() {
   const skipping = useGameStore((s) => s.skipping);
   const setSkipping = useGameStore((s) => s.setSkipping);
   const outbid = useGameStore((s) => s.outbid);
-  // the alert is live for a moment after it fires
-  const outbidFresh = outbid && Date.now() - outbid.at < 2600 ? outbid : null;
+  const clearOutbid = useGameStore((s) => s.clearOutbid);
+  // The alert clears itself; there is no tick during rtm/sold to re-render it.
+  useEffect(() => {
+    if (!outbid) return;
+    const id = setTimeout(clearOutbid, 2600);
+    return () => clearTimeout(id);
+  }, [outbid, clearOutbid]);
   const [squadOpen, setSquadOpen] = useState(false);
 
   const player = auction.currentPlayer;
@@ -103,7 +108,7 @@ export default function AuctionFloor() {
             franchise={f}
             isLeading={auction.currentBidderId === f.id}
             passed={auction.passed.includes(f.id)}
-            outbidKey={f.id === humanId && outbidFresh ? outbidFresh.at : undefined}
+            outbidKey={f.id === humanId && outbid ? outbid.at : undefined}
           />
         ))}
         <button
@@ -141,16 +146,16 @@ export default function AuctionFloor() {
 
       {/* ---- outbid alert ---- */}
       <AnimatePresence>
-        {outbidFresh && (
+        {outbid && (
           <motion.div
-            key={outbidFresh.at}
+            key={outbid.at}
             initial={{ opacity: 0, y: 14, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ type: "spring", stiffness: 380, damping: 22 }}
             className="pointer-events-none fixed bottom-40 left-1/2 z-30 -translate-x-1/2 rounded-full bg-red-950/85 px-4 py-1.5 text-sm font-black uppercase tracking-wider text-red-200 shadow-lg backdrop-blur-md sm:bottom-32"
           >
-            Outbid by <span style={{ color: outbidFresh.color }}>{outbidFresh.by}</span>
+            Outbid by <span style={{ color: outbid.color }}>{outbid.by}</span>
           </motion.div>
         )}
       </AnimatePresence>

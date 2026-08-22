@@ -2,7 +2,8 @@
 // the hall stays visible. Colour bar, short name, purse, slots; the leading
 // team lights up like a raised paddle.
 
-import { motion } from "motion/react";
+import { useEffect } from "react";
+import { motion, useAnimationControls } from "motion/react";
 import type { Franchise } from "../engine/types";
 import { SQUAD_MAX, overseasCount } from "../engine/rules";
 import { START_BUDGET } from "../engine/franchises";
@@ -23,17 +24,21 @@ function shortName(name: string): string {
 }
 
 export default function TeamRail({ franchise: f, isLeading, passed, outbidKey }: Props) {
+  const shake = useAnimationControls();
+
+  // Fire the outbid shake without remounting: a key change here would restart
+  // the inner leading-state spring and make the entry visibly pop.
+  useEffect(() => {
+    if (!outbidKey) return;
+    void shake.start({
+      x: [0, -5, 5, -4, 3, 0],
+      backgroundColor: ["rgba(2,6,23,0)", "rgba(127,29,29,0.8)", "rgba(2,6,23,0)"],
+      transition: { duration: 0.55 },
+    });
+  }, [outbidKey, shake]);
+
   return (
-    <motion.div
-      key={outbidKey ? `ob-${outbidKey}` : "steady"}
-      initial={outbidKey ? { x: 0 } : false}
-      // a rejected-bid shake, only when the human loses the lead
-      {...(outbidKey
-        ? { animate: { x: [0, -5, 5, -4, 3, 0], backgroundColor: ["rgba(2,6,23,0.55)", "rgba(127,29,29,0.75)", "rgba(2,6,23,0.55)"] } }
-        : {})}
-      transition={{ duration: 0.5 }}
-      className="rounded-md"
-    >
+    <motion.div animate={shake} className="rounded-md">
     <motion.div
       animate={
         isLeading

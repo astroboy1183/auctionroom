@@ -83,10 +83,6 @@ export function useSoundEffects() {
     }
 
     if (!soundOn) return;
-    if (lostLead) {
-      outbidCue();
-      return; // its own cue replaces the ordinary bid knock
-    }
 
     // A new man on the block — and a motif when a whole new set opens.
     if (auction.phase === "bidding" && player && player.id !== p.playerId) {
@@ -109,7 +105,10 @@ export function useSoundEffects() {
       const rung = auction.bidHistory.filter((b) => b.playerId === player?.id).length;
       const bidderIdx = auction.franchises.findIndex((f) => f.id === auction.currentBidderId);
       const bidder = auction.franchises[bidderIdx];
-      if (auction.currentBidderId === humanId) paddle();
+      // Losing the lead gets its own cue in place of the ordinary knock —
+      // but everything after (crowd swell, big-money call) still runs.
+      if (lostLead) outbidCue();
+      else if (auction.currentBidderId === humanId) paddle();
       else blip(rung);
 
       // The bench calls its own number — rate-limited inside speakTeam.
