@@ -5,6 +5,38 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-016 — Broadcast-overlay layout: the centre of the screen belongs to the hall
+**v1 polish, 2026-08-21.** First 3D pass kept the v0 2D layout (big centred
+player card, wide franchise panel column, centred bid button) and it buried the
+hall — the auctioneer sat directly behind the BID button. Rebuilt as a real
+broadcast overlay: a 152px franchise **rail** down the left (colour bar, short
+name, purse, slots), the player as a **lower-third banner** bottom-left, a
+compact **money HUD** bottom-right holding timer + standing bid + BID/PASS, and
+a bid ticker top-right. Everything is translucent with backdrop-blur and hugs
+an edge; nothing occupies the middle.
+**Also:** camera reframed to centre the podium in the cleared space, auctioneer
+scaled 1.35× with a lower body and a taller podium in front (he was visibly
+floating), volumetric spotlight cone over the stage, framed backdrop screen and
+a gold stage lip, crowd arc widened to 1.15π so it frames the shot.
+**Mobile:** the rail collapses to a horizontal scrolling strip under the header
+and the lower-third/HUD stack — verified at 380px with no horizontal scroll.
+
+## D-015 — All audio runs through a synthesized hall reverb
+**v1 polish, 2026-08-21.** The first sound pass was raw oscillator beeps
+(triangle blip, square-wave paddle, brown-noise crowd) and sounded like a
+1980s toy. Rebuilt around a shared bus: every cue feeds a dry path plus a
+**ConvolverNode whose impulse response is generated at runtime** (2.6s decaying
+noise with early reflections), through a compressor.
+**Cues are now struck tones** — stacked sine partials with soft attacks and
+exponential tails, layered with filtered noise transients — instead of single
+oscillators: a warm wooden knock for rival bids that **pitches up as the money
+climbs**, a fuller bell for your own paddle, a rim-click clock that tightens in
+the last three seconds, a gavel built from a hard crack over a resonant block,
+and chord cues (RTM sting, set motif, winner fanfare) that arpeggiate in.
+The crowd bed is two detuned noise layers with slow amplitude undulation.
+**Why generated IR:** keeps the no-assets rule (D-011) while giving everything
+a sense of room, which is what made the old set sound cheap.
+
 ## D-014 — Desperation override in the bidding brain
 **v1, 2026-08-21.** When a player fills a mandatory role hole and the remaining
 pool can no longer cover that deficit, bots ignore their value ceiling and bid

@@ -39,7 +39,7 @@ function Auctioneer() {
     const { phase, bid } = gameFacts();
     const t = state.clock.elapsedTime;
     // breathe
-    body.current.position.y = 2.62 + Math.sin(t * 1.6) * 0.03;
+    body.current.position.y = 2.3 + Math.sin(t * 1.6) * 0.03;
     body.current.rotation.y = Math.sin(t * 0.4) * 0.12;
 
     if (phase === "sold" && prevPhase.current !== "sold") slam.current = 1;
@@ -58,13 +58,22 @@ function Auctioneer() {
   });
 
   return (
-    <group position={[0, 0, -3.2]}>
-      {/* podium */}
-      <mesh position={[0, 0.9, 0.6]}>
-        <boxGeometry args={[1.5, 1.8, 0.9]} />
-        <meshStandardMaterial color="#3b2f23" roughness={0.6} />
+    <group position={[0, 0, -3.2]} scale={1.35}>
+      {/* podium — stands in front, hiding where the body meets the floor */}
+      <mesh position={[0, 1.0, 0.72]}>
+        <boxGeometry args={[1.75, 2.0, 0.95]} />
+        <meshStandardMaterial color="#4a3826" roughness={0.55} />
       </mesh>
-      <group ref={body} position={[0, 2.62, 0]}>
+      <mesh position={[0, 2.03, 0.72]}>
+        <boxGeometry args={[1.95, 0.1, 1.1]} />
+        <meshStandardMaterial color="#6b4f33" roughness={0.4} />
+      </mesh>
+      {/* lower body, so nothing floats */}
+      <mesh position={[0, 1.15, 0]}>
+        <cylinderGeometry args={[0.34, 0.42, 1.7, 12]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.8} />
+      </mesh>
+      <group ref={body} position={[0, 2.3, 0]}>
         {/* torso */}
         <mesh>
           <capsuleGeometry args={[0.34, 0.7, 6, 12]} />
@@ -171,12 +180,12 @@ function Crowd() {
     for (let i = 0; i < N; i++) {
       const row = Math.floor(i / 36);
       const col = i % 36;
-      const angle = ((col + 0.5) / 36 - 0.5) * Math.PI * 0.72;
-      const radius = 8.6 + row * 1.35;
+      const angle = ((col + 0.5) / 36 - 0.5) * Math.PI * 1.15;
+      const radius = 9.4 + row * 1.4;
       out.push([
         Math.sin(angle) * radius,
-        0.7 + row * 0.5,
-        Math.cos(angle) * radius - 2.5,
+        0.55 + row * 0.42,
+        Math.cos(angle) * radius - 3,
         Math.random() * Math.PI * 2, // bob phase
       ]);
     }
@@ -191,7 +200,7 @@ function Crowd() {
     for (let i = 0; i < N; i++) {
       const [x, y, z, ph] = seats[i];
       dummy.position.set(x, y + Math.sin(t * 2.1 + ph) * excited, z);
-      dummy.rotation.y = -Math.atan2(x, z + 2.5);
+      dummy.rotation.y = -Math.atan2(x, z + 3);
       dummy.updateMatrix();
       mesh.current.setMatrixAt(i, dummy.matrix);
     }
@@ -214,13 +223,13 @@ function CameraRig() {
     const t = state.clock.elapsedTime;
     const closing = phase === "bidding" && bid !== null && timer <= 3;
     const sold = phase === "sold";
-    const targetZ = sold ? 6.5 : closing ? 7.6 : 9.5;
-    const targetY = sold ? 2.5 : closing ? 2.8 : 3.2;
+    const targetZ = sold ? 6.8 : closing ? 8.2 : 10;
+    const targetY = sold ? 3.4 : closing ? 3.7 : 4.1;
     const cam = state.camera;
     cam.position.z = damp(cam.position.z, targetZ, 2.2, delta);
     cam.position.y = damp(cam.position.y, targetY, 2.2, delta);
-    cam.position.x = damp(cam.position.x, Math.sin(t * 0.11) * 1.6, 1.5, delta);
-    cam.lookAt(0, 3.0, -4);
+    cam.position.x = damp(cam.position.x, Math.sin(t * 0.11) * 1.3, 1.5, delta);
+    cam.lookAt(0, 2.5, -3.4);
   });
   return null;
 }
@@ -247,10 +256,35 @@ function Scene() {
         <cylinderGeometry args={[4.6, 4.9, 0.5, 40]} />
         <meshStandardMaterial color="#25314f" roughness={0.45} />
       </mesh>
-      {/* backdrop screen */}
+      {/* backdrop: dark screen in a lit frame */}
       <mesh position={[0, 4.2, -7.5]}>
         <planeGeometry args={[13, 5.6]} />
-        <meshStandardMaterial color="#0c1631" emissive="#1d4ed8" emissiveIntensity={0.5} />
+        <meshStandardMaterial color="#0a1226" emissive="#1e3a8a" emissiveIntensity={0.16} roughness={0.9} />
+      </mesh>
+      {[-2.85, 2.85].map((y) => (
+        <mesh key={y} position={[0, 4.2 + y, -7.45]}>
+          <boxGeometry args={[13.4, 0.12, 0.12]} />
+          <meshStandardMaterial color="#1e293b" emissive="#38bdf8" emissiveIntensity={1.6} />
+        </mesh>
+      ))}
+      {[-6.6, 6.6].map((x) => (
+        <mesh key={x} position={[x, 4.2, -7.45]}>
+          <boxGeometry args={[0.12, 5.8, 0.12]} />
+          <meshStandardMaterial color="#1e293b" emissive="#38bdf8" emissiveIntensity={1.2} />
+        </mesh>
+      ))}
+      {/* stage lip glow */}
+      <mesh position={[0, 0.52, -3]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[4.55, 4.85, 44]} />
+        <meshBasicMaterial color="#fbbf24" transparent opacity={0.5} />
+      </mesh>
+
+      {/* volumetric-ish spotlight cone over the podium */}
+      <mesh position={[0, 5.4, -3.2]}>
+        <coneGeometry args={[2.4, 6.2, 28, 1, true]} />
+        <meshBasicMaterial
+          color="#fde68a" transparent opacity={0.055} side={THREE.DoubleSide} depthWrite={false}
+        />
       </mesh>
 
       <Auctioneer />
@@ -269,7 +303,7 @@ export default function Hall() {
       <Canvas
         dpr={[1, 1.75]}
         gl={{ antialias: true, powerPreference: "high-performance" }}
-        camera={{ position: [0, 3.2, 9.5], fov: 58 }}
+        camera={{ position: [0, 4.1, 10], fov: 54 }}
       >
         <color attach="background" args={["#020617"]} />
         <Scene />

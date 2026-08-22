@@ -61,10 +61,12 @@ export function useSoundEffects() {
       return;
     }
 
-    // Bids land: your paddle thwacks, rivals blip; big money moves the room.
+    // Bids land: your paddle rings out, rivals knock; the tone climbs with
+    // the money so a long war audibly escalates.
     if (auction.currentBid !== null && auction.currentBid !== p.bid) {
+      const rung = auction.bidHistory.filter((b) => b.playerId === player?.id).length;
       if (auction.currentBidderId === humanId) paddle();
-      else blip();
+      else blip(rung);
       const before = Math.floor((p.bid ?? 0) / 1000);
       const after = Math.floor(auction.currentBid / 1000);
       if (after > before) {
@@ -73,11 +75,11 @@ export function useSoundEffects() {
       }
     }
 
-    // The clock gets loud at the death.
+    // The clock tightens at the death.
     if (auction.phase === "bidding" && auction.timer !== p.timer && auction.currentBid !== null) {
       if (auction.timer === 2) speak("Going once…");
       else if (auction.timer === 1) speak("Going twice…");
-      if (auction.timer <= 3 && auction.timer >= 0) clockTick();
+      if (auction.timer <= 3 && auction.timer >= 0) clockTick(3 - auction.timer);
     }
 
     // Phase moments.

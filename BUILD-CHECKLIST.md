@@ -104,6 +104,9 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 - [x] Interaction SFX: paddle thwack on your bid, whoosh on pass, RTM sting,
       set-change motif, winner fanfare
 - [x] Auctioneer calls big money live ("nine crore!") over the crowd
+- [x] Broadcast-overlay layout: edge-hugging UI, hall visible in the centre (D-016)
+- [x] Hall polish: standing auctioneer, spotlight cone, framed screen, stage lip
+- [x] Audio rebuilt on a convolution-reverb bus; struck-tone cues (D-015)
 - [ ] **GATE 🧑:** play a full 8-team auction in the 3D hall with sound on
 
 ## Phase 6 (v2) — Multiplayer
