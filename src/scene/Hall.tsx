@@ -32,6 +32,7 @@ function gameFacts() {
 function Auctioneer() {
   const arm = useRef<THREE.Group>(null!);
   const body = useRef<THREE.Group>(null!);
+  const flash = useRef<THREE.PointLight>(null!);
   const slam = useRef(0); // 0..1 progress of the current slam
   const prevPhase = useRef<string>("bidding");
 
@@ -44,6 +45,12 @@ function Auctioneer() {
 
     if (phase === "sold" && prevPhase.current !== "sold") slam.current = 1;
     prevPhase.current = phase;
+
+    // impact flash: brightest just as the gavel bottoms out
+    if (flash.current) {
+      const k = slam.current;
+      flash.current.intensity = damp(flash.current.intensity, k > 0 && k < 0.55 ? 26 : 0, 14, delta);
+    }
 
     let target = -0.35; // arm rest
     if (slam.current > 0) {
@@ -68,6 +75,12 @@ function Auctioneer() {
         <boxGeometry args={[1.95, 0.1, 1.1]} />
         <meshStandardMaterial color="#6b4f33" roughness={0.4} />
       </mesh>
+      {/* the block the gavel actually strikes — gives the slam a target */}
+      <mesh position={[0.52, 2.12, 0.72]}>
+        <cylinderGeometry args={[0.2, 0.22, 0.1, 20]} />
+        <meshStandardMaterial color="#e7e5e4" roughness={0.35} />
+      </mesh>
+      <pointLight ref={flash} position={[0.52, 2.4, 0.9]} intensity={0} color="#fff7ed" distance={5} />
       {/* lower body, so nothing floats */}
       <mesh position={[0, 1.15, 0]}>
         <cylinderGeometry args={[0.34, 0.42, 1.7, 12]} />
@@ -95,15 +108,23 @@ function Auctioneer() {
             <capsuleGeometry args={[0.09, 0.55, 4, 8]} />
             <meshStandardMaterial color="#7f1d1d" roughness={0.7} />
           </mesh>
-          <group position={[0.68, 0.05, 0]}>
+          <group position={[0.68, 0.05, 0]} scale={1.25}>
+            {/* handle */}
             <mesh rotation={[1.57, 0, 0]}>
-              <cylinderGeometry args={[0.03, 0.03, 0.45]} />
-              <meshStandardMaterial color="#8b5a2b" />
+              <cylinderGeometry args={[0.032, 0.032, 0.46]} />
+              <meshStandardMaterial color="#c98f52" roughness={0.5} />
             </mesh>
-            <mesh position={[0, 0, -0.22]} rotation={[0, 0, 1.57]}>
-              <cylinderGeometry args={[0.11, 0.11, 0.3]} />
-              <meshStandardMaterial color="#5c3a1e" />
+            {/* head — light barrel with dark caps, so it separates from the sleeve */}
+            <mesh position={[0, 0, -0.24]} rotation={[0, 0, 1.57]}>
+              <cylinderGeometry args={[0.125, 0.125, 0.34]} />
+              <meshStandardMaterial color="#d6a56a" roughness={0.45} />
             </mesh>
+            {[-0.17, 0.17].map((o) => (
+              <mesh key={o} position={[o, 0, -0.24]} rotation={[0, 0, 1.57]}>
+                <cylinderGeometry args={[0.13, 0.13, 0.05]} />
+                <meshStandardMaterial color="#7c4a21" roughness={0.6} />
+              </mesh>
+            ))}
           </group>
         </group>
       </group>
@@ -359,6 +380,17 @@ function Jumbotron() {
     for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 2);
 
     if (!player) {
+      // Lobby / results: the board becomes signage.
+      g.textAlign = "center";
+      g.fillStyle = "#f8fafc";
+      g.font = "900 116px system-ui, sans-serif";
+      g.fillText("AUCTION", W / 2, 250);
+      g.fillStyle = "#fbbf24";
+      g.fillText("ROOM", W / 2, 372);
+      g.fillStyle = "#64748b";
+      g.font = "700 34px system-ui, sans-serif";
+      g.fillText("100 CRICKETERS · 8 FRANCHISES · ₹120 CRORE EACH", W / 2, 452);
+      g.textAlign = "left";
       texture.needsUpdate = true;
       return;
     }
@@ -398,7 +430,7 @@ function Jumbotron() {
     g.textAlign = "left";
 
     // generated likeness, left of the copy
-    drawPortrait(g, 168, 300, 118, player);
+    drawPortrait(g, 168, 286, 112, player);
     const L = 330; // text column starts right of the portrait
 
     // header strip
@@ -431,16 +463,18 @@ function Jumbotron() {
     g.font = "700 30px ui-monospace, monospace";
     g.fillText(`${player.rating}`, x + starsWidth + 10, 224);
 
-    // tags
-    g.font = "600 28px system-ui, sans-serif";
-    let tx = L;
-    for (const tag of player.tags.slice(0, 4)) {
-      const w = g.measureText(tag).width + 26;
-      g.fillStyle = "rgba(255,255,255,0.09)";
-      g.fillRect(tx, 248, w, 44);
+    // Tags live bottom-left, under the portrait: the auctioneer stands in
+    // front of canvas x≈470–770 below y≈300, and this row clears him.
+    g.font = "600 26px system-ui, sans-serif";
+    let tx = 44;
+    for (const tag of player.tags.slice(0, 3)) {
+      const w = g.measureText(tag).width + 24;
+      if (tx + w > 452) break; // never run under the auctioneer
+      g.fillStyle = "rgba(255,255,255,0.10)";
+      g.fillRect(tx, 476, w, 42);
       g.fillStyle = "#cbd5e1";
-      g.fillText(tag, tx + 13, 279);
-      tx += w + 12;
+      g.fillText(tag, tx + 12, 505);
+      tx += w + 10;
     }
 
     // Money lives in the RIGHT column — the auctioneer stands in front of the
@@ -546,7 +580,7 @@ function Table({ index, count }: { index: number; count: number }) {
   const color = useGameStore((s) => s.auction.franchises[index]?.color ?? "#64748b");
   // Arc between stage and camera, every table facing the podium.
   const angle = ((index + 0.5) / count - 0.5) * Math.PI * 0.61;
-  const radius = 5.5;
+  const radius = 4.95; // hugs the stage ring — the gap read as dead floor
   const x = Math.sin(angle) * radius;
   const z = Math.cos(angle) * radius - 2.5;
 
@@ -575,12 +609,17 @@ function Table({ index, count }: { index: number; count: number }) {
       </mesh>
       <mesh position={[0, 0.38, 0]}>
         <boxGeometry args={[1.5, 0.72, 0.7]} />
-        <meshStandardMaterial color="#1e293b" roughness={0.7} />
+        <meshStandardMaterial color="#2b3a55" roughness={0.62} />
       </mesh>
       {/* team-colour strip */}
       <mesh position={[0, 0.84, 0.36]}>
         <boxGeometry args={[1.7, 0.06, 0.06]} />
         <meshStandardMaterial ref={glow} emissiveIntensity={0.35} />
+      </mesh>
+      {/* base underglow — reads the bench's identity even in shadow */}
+      <mesh position={[0, 0.06, 0.36]}>
+        <boxGeometry args={[1.55, 0.05, 0.05]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.4} />
       </mesh>
       <Bidders index={index} color={color} />
 
@@ -603,9 +642,22 @@ function Table({ index, count }: { index: number; count: number }) {
 // ----------------------------------------------------------------- crowd
 
 /** Bobbing silhouette crowd on risers; excitement follows the timer. */
+const CROWD_TONES = ["#33415c", "#3b4a6b", "#2a3752", "#44536f", "#2f3d5a"];
+
 function Crowd() {
   const mesh = useRef<THREE.InstancedMesh>(null!);
   const N = 180;
+  const colors = useMemo(() => {
+    const arr = new Float32Array(N * 3);
+    const c = new THREE.Color();
+    for (let i = 0; i < N; i++) {
+      c.set(CROWD_TONES[i % CROWD_TONES.length]);
+      // a little per-figure variance so it stops reading as one cloned blob
+      c.offsetHSL(0, 0, ((i * 37) % 11) / 220 - 0.02);
+      c.toArray(arr, i * 3);
+    }
+    return arr;
+  }, []);
   const seats = useMemo(() => {
     const out: [number, number, number, number][] = [];
     for (let i = 0; i < N; i++) {
@@ -640,23 +692,93 @@ function Crowd() {
 
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, N]}>
-      <capsuleGeometry args={[0.22, 0.5, 4, 8]} />
-      <meshStandardMaterial color="#1e2a45" roughness={1} />
+      <capsuleGeometry args={[0.22, 0.5, 4, 8]}>
+        <instancedBufferAttribute attach="attributes-color" args={[colors, 3]} />
+      </capsuleGeometry>
+      <meshStandardMaterial vertexColors roughness={0.95} />
     </instancedMesh>
+  );
+}
+
+// ----------------------------------------------------------------- floor
+
+/** Carpet: concentric rings plus eight faint radials pointing at the benches,
+ * drawn to a canvas texture. Without it the space between stage and tables
+ * reads as empty plane. */
+function Floor() {
+  const texture = useMemo(() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 1024;
+    const g = c.getContext("2d")!;
+    const M = 512;
+
+    const base = g.createRadialGradient(M, M, 60, M, M, M);
+    base.addColorStop(0, "#1b2947");
+    base.addColorStop(0.55, "#131f38");
+    base.addColorStop(1, "#080e1c"); // vignette pushes the eye to the stage
+    g.fillStyle = base;
+    g.fillRect(0, 0, 1024, 1024);
+
+    g.strokeStyle = "rgba(148,163,184,0.13)";
+    g.lineWidth = 2.5;
+    for (const r of [150, 235, 320, 405, 480]) {
+      g.beginPath();
+      g.arc(M, M, r, 0, Math.PI * 2);
+      g.stroke();
+    }
+
+    g.strokeStyle = "rgba(148,163,184,0.09)";
+    g.lineWidth = 2;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      g.beginPath();
+      g.moveTo(M + Math.cos(a) * 150, M + Math.sin(a) * 150);
+      g.lineTo(M + Math.cos(a) * 480, M + Math.sin(a) * 480);
+      g.stroke();
+    }
+
+    g.strokeStyle = "rgba(251,191,36,0.16)";
+    g.lineWidth = 5;
+    g.beginPath();
+    g.arc(M, M, 405, 0, Math.PI * 2);
+    g.stroke();
+
+    const tx = new THREE.CanvasTexture(c);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    return tx;
+  }, []);
+
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, -2]}>
+      <circleGeometry args={[15, 56]} />
+      <meshStandardMaterial map={texture} roughness={0.92} />
+    </mesh>
   );
 }
 
 // ---------------------------------------------------------------- camera
 
-function CameraRig() {
+function CameraRig({ mode }: { mode: HallMode }) {
   useFrame((state, delta) => {
     const { phase, timer, bid } = gameFacts();
     const t = state.clock.elapsedTime;
+    const cam = state.camera;
+
+    if (mode !== "auction") {
+      // Lobby and results: a slow wide orbit of the room, no game reactivity.
+      const speed = mode === "idle" ? 0.09 : 0.05;
+      const radius = mode === "idle" ? 12.5 : 9.5;
+      cam.position.x = damp(cam.position.x, Math.sin(t * speed) * radius * 0.55, 1.2, delta);
+      cam.position.z = damp(cam.position.z, radius, 1.2, delta);
+      cam.position.y = damp(cam.position.y, mode === "idle" ? 4.6 : 3.9, 1.2, delta);
+      cam.lookAt(0, 2.6, -3.4);
+      return;
+    }
+
     const closing = phase === "bidding" && bid !== null && timer <= 3;
     const sold = phase === "sold";
     const targetZ = sold ? 6.8 : closing ? 8.2 : 10;
     const targetY = sold ? 3.4 : closing ? 3.7 : 4.1;
-    const cam = state.camera;
     cam.position.z = damp(cam.position.z, targetZ, 2.2, delta);
     cam.position.y = damp(cam.position.y, targetY, 2.2, delta);
     cam.position.x = damp(cam.position.x, Math.sin(t * 0.11) * 1.3, 1.5, delta);
@@ -667,22 +789,31 @@ function CameraRig() {
 
 // ------------------------------------------------------------------ hall
 
-function Scene() {
+export type HallMode = "auction" | "idle" | "podium";
+
+function Scene({ mode }: { mode: HallMode }) {
   return (
     <>
       <fog attach="fog" args={["#050b1c", 18, 46]} />
-      <hemisphereLight args={["#64748b", "#0b1120", 1.5]} />
-      <ambientLight intensity={0.5} />
-      <spotLight position={[0, 10, 3]} angle={0.62} penumbra={0.5} intensity={420} color="#fde68a" />
+      <hemisphereLight args={["#64748b", "#0b1120", 1.1]} />
+      <ambientLight intensity={0.34} />
+      <spotLight position={[0, 10, 3]} angle={0.62} penumbra={0.5} intensity={300} color="#fde68a" />
       <pointLight position={[-7, 5, 5]} intensity={110} color="#38bdf8" />
       <pointLight position={[7, 5, 5]} intensity={110} color="#f472b6" />
       <pointLight position={[0, 4, -6]} intensity={90} color="#a78bfa" />
+      {/* front fill: the benches face the camera and every other light is
+          behind them, so without this their fronts render near-black */}
+      <pointLight position={[0, 2.2, 7]} intensity={38} color="#bfdbfe" distance={20} />
+      {/* rim light from the stage, so the crowd catches an edge and reads as
+          people rather than a flat dark texture */}
+      <pointLight position={[0, 5, -1]} intensity={70} color="#93c5fd" distance={24} />
 
       {/* floor + stage */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[18, 48]} />
-        <meshStandardMaterial color="#16203a" roughness={0.8} />
+        <circleGeometry args={[20, 48]} />
+        <meshStandardMaterial color="#0a1020" roughness={0.85} />
       </mesh>
+      <Floor />
       <mesh position={[0, 0.25, -3]}>
         <cylinderGeometry args={[4.6, 4.9, 0.5, 40]} />
         <meshStandardMaterial color="#25314f" roughness={0.45} />
@@ -724,12 +855,12 @@ function Scene() {
         <Table key={i} index={i} count={8} />
       ))}
       <Crowd />
-      <CameraRig />
+      <CameraRig mode={mode} />
     </>
   );
 }
 
-export default function Hall() {
+export default function Hall({ mode = "auction" }: { mode?: HallMode }) {
   return (
     <div className="fixed inset-0 -z-10" aria-hidden>
       <Canvas
@@ -738,7 +869,7 @@ export default function Hall() {
         camera={{ position: [0, 4.1, 10], fov: 54 }}
       >
         <color attach="background" args={["#020617"]} />
-        <Scene />
+        <Scene mode={mode} />
       </Canvas>
     </div>
   );

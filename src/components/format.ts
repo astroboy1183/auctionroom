@@ -6,3 +6,13 @@ export function money(lakhs: number): string {
   }
   return `₹${lakhs}L`;
 }
+
+/** Tight variant for the franchise rail, where ₹120 Cr + slots must share
+ * one line at every purse size. */
+export function moneyCompact(lakhs: number): string {
+  if (lakhs >= 100) {
+    const cr = lakhs / 100;
+    return `₹${Number.isInteger(cr) ? cr : cr.toFixed(1)}Cr`;
+  }
+  return `₹${lakhs}L`;
+}

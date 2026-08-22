@@ -33,6 +33,9 @@ export default function AuctionFloor() {
   const toggleView3d = useGameStore((s) => s.toggleView3d);
   const skipping = useGameStore((s) => s.skipping);
   const setSkipping = useGameStore((s) => s.setSkipping);
+  const outbid = useGameStore((s) => s.outbid);
+  // the alert is live for a moment after it fires
+  const outbidFresh = outbid && Date.now() - outbid.at < 2600 ? outbid : null;
   const [squadOpen, setSquadOpen] = useState(false);
 
   const player = auction.currentPlayer;
@@ -93,13 +96,14 @@ export default function AuctionFloor() {
       </header>
 
       {/* ---- left rail: the eight franchises ---- */}
-      <aside className="pointer-events-auto fixed left-0 top-16 z-20 hidden w-[152px] flex-col gap-1 px-2 sm:flex">
+      <aside className="pointer-events-auto fixed left-0 top-16 z-20 hidden w-[170px] flex-col gap-1 px-2 sm:flex">
         {auction.franchises.map((f) => (
           <TeamRail
             key={f.id}
             franchise={f}
             isLeading={auction.currentBidderId === f.id}
             passed={auction.passed.includes(f.id)}
+            outbidKey={f.id === humanId && outbidFresh ? outbidFresh.at : undefined}
           />
         ))}
         <button
@@ -134,6 +138,22 @@ export default function AuctionFloor() {
         <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-500">Bidding</p>
         <BidTicker auction={auction} />
       </div>
+
+      {/* ---- outbid alert ---- */}
+      <AnimatePresence>
+        {outbidFresh && (
+          <motion.div
+            key={outbidFresh.at}
+            initial={{ opacity: 0, y: 14, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ type: "spring", stiffness: 380, damping: 22 }}
+            className="pointer-events-none fixed bottom-40 left-1/2 z-30 -translate-x-1/2 rounded-full bg-red-950/85 px-4 py-1.5 text-sm font-black uppercase tracking-wider text-red-200 shadow-lg backdrop-blur-md sm:bottom-32"
+          >
+            Outbid by <span style={{ color: outbidFresh.color }}>{outbidFresh.by}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ---- bottom: lower-third + money HUD ---- */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex flex-col items-stretch gap-2 px-3 pb-3 sm:flex-row sm:items-end sm:justify-between sm:px-5 sm:pb-4">

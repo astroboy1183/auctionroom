@@ -6,12 +6,14 @@ import { motion } from "motion/react";
 import type { Franchise } from "../engine/types";
 import { SQUAD_MAX, overseasCount } from "../engine/rules";
 import { START_BUDGET } from "../engine/franchises";
-import { money } from "./format";
+import { moneyCompact } from "./format";
 
 interface Props {
   franchise: Franchise;
   isLeading: boolean;
   passed: boolean;
+  /** Bumped when this franchise (the human) has just lost the lead. */
+  outbidKey?: number;
 }
 
 /** "Hyderabad Hawks" → "Hawks" — the rail has no room for the city. */
@@ -20,8 +22,18 @@ function shortName(name: string): string {
   return parts[parts.length - 1];
 }
 
-export default function TeamRail({ franchise: f, isLeading, passed }: Props) {
+export default function TeamRail({ franchise: f, isLeading, passed, outbidKey }: Props) {
   return (
+    <motion.div
+      key={outbidKey ? `ob-${outbidKey}` : "steady"}
+      initial={outbidKey ? { x: 0 } : false}
+      // a rejected-bid shake, only when the human loses the lead
+      {...(outbidKey
+        ? { animate: { x: [0, -5, 5, -4, 3, 0], backgroundColor: ["rgba(2,6,23,0.55)", "rgba(127,29,29,0.75)", "rgba(2,6,23,0.55)"] } }
+        : {})}
+      transition={{ duration: 0.5 }}
+      className="rounded-md"
+    >
     <motion.div
       animate={
         isLeading
@@ -53,12 +65,13 @@ export default function TeamRail({ franchise: f, isLeading, passed }: Props) {
         />
       </div>
       <div className="mt-0.5 flex items-baseline justify-between text-[10px] leading-tight text-slate-400">
-        <span className="font-mono font-semibold text-slate-200">{money(f.budget)}</span>
+        <span className="font-mono font-semibold text-slate-200">{moneyCompact(f.budget)}</span>
         <span>
           {f.squad.length}/{SQUAD_MAX}
           {overseasCount(f.squad) > 0 && <span className="ml-1 text-slate-500">✈{overseasCount(f.squad)}</span>}
         </span>
       </div>
+    </motion.div>
     </motion.div>
   );
 }

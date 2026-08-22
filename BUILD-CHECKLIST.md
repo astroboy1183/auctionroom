@@ -111,6 +111,12 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 - [x] 16 seated bidders — two per bench in team colours, lean in when leading
 - [x] Host speaks more: marquee callouts, set intros, colour commentary
 - [x] Eight franchise voices calling their own bids (D-018)
+- [x] Outbid feedback: sour cue, rail shake, toast (D-022)
+- [x] Board tags cleared of the auctioneer; readable gavel + strike block
+- [x] Bench front fill light + team underglow; crowd vertex colours + rim light
+- [x] Floor carpet and tightened bench arc; rail widened
+- [x] Lobby and results render inside the hall, idle-mounted after first paint
+- [x] Fix hardcoded "of 4" / "12/15" caps left over from the 4-team era
 - [ ] **GATE 🧑:** play a full 8-team auction in the 3D hall with sound on
 
 ## Phase 6 (v2) — Multiplayer

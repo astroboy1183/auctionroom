@@ -5,6 +5,47 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-022 — Visual polish pass: the eight-point review
+**v1, 2026-08-21.** Worked through a visual review in three groups.
+
+**Game feel.** Losing the lead is now an event: a sour descending minor second
+(deliberately unlike the bid knock), a red shake on your rail entry, and an
+"OUTBID BY <team>" toast. Detection is `prev.bidderId === human && next !==
+human`; the flag is raised even when muted, because two of the three cues are
+visual.
+
+**Scene corrections.** Board tags moved to the clear bottom-left — the
+auctioneer occupies canvas x≈470–770 below y≈300, and the old tag row ran
+straight under him. The gavel got a light two-tone head at 1.25× with a white
+strike block on the podium and a point-light flash timed to impact, because
+dark-brown-on-dark-stage was unreadable. Benches gained a front fill light
+(every other light is behind them, so their fronts rendered near-black) plus a
+team-colour underglow strip.
+
+**Room.** Bench arc pulled 5.5 → 4.95 to close the dead floor, and a carpet
+texture (concentric rings, eight radials pointing at the benches, outer
+vignette) replaced the bare plane. The crowd got per-instance vertex colours
+across five tones plus a rim light so it reads as people, not one cloned blob.
+Franchise rail widened 152 → 170px with a `moneyCompact()` variant so purse and
+slots share one line at ₹120 Cr.
+
+**Lighting rebalance:** the new fills initially blew out every face to white;
+spot 420 → 300, ambient 0.5 → 0.34, hemisphere 1.5 → 1.1, front fill 70 → 38,
+rim 150 → 70.
+
+**Lobby and results now sit inside the hall** via `HallBackdrop`, which mounts
+the 3D chunk on `requestIdleCallback` *after* first paint (and prefetches on
+hover of Start Auction), so the lobby stays instantly interactive. `Hall` takes
+a `mode` — `idle` slowly orbits for the lobby, `podium` frames the stage for
+results, `auction` is the reactive game camera. The jumbotron shows AUCTIONROOM
+signage when no player is on the block.
+
+**Two real bugs surfaced by putting results on screen:** it said "#7 of 4" and
+"12/15" — hardcoded from the 4-team, 15-player era. Both now read from
+`franchises.length`, `SQUAD_MAX` and `OVERSEAS_MAX`. Deleted the dead
+`FranchisePanel.tsx` (superseded by `TeamRail`) which carried the same stale
+`/6` overseas cap.
+
 ## D-021 — Player likenesses are generated, never photographs
 **v1, 2026-08-21.** The jumbotron shows a stylised head-and-shoulders portrait
 per cricketer: skin tone, kit colour, hair, beard and headgear are all derived

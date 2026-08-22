@@ -6,8 +6,9 @@ import { motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { finalScores } from "../engine/scoring";
 import { START_BUDGET } from "../engine/franchises";
-import { unfilledNeeds, overseasCount } from "../engine/rules";
+import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../engine/rules";
 import { money } from "../components/format";
+import HallBackdrop from "../components/HallBackdrop";
 import type { Role } from "../engine/types";
 
 const ROLE_ORDER: Role[] = ["BAT", "BOWL", "AR", "WK"];
@@ -43,9 +44,14 @@ export default function Results() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
+    <div className="relative min-h-screen px-4 py-10 text-slate-100">
+      <HallBackdrop mode="podium" />
       <div className="mx-auto max-w-5xl">
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto max-w-2xl rounded-2xl bg-slate-950/70 p-6 text-center backdrop-blur-md"
+        >
           <p className="text-6xl">🏆</p>
           <h1 className="mt-2 text-4xl font-black">
             <span style={{ color: winner.color }}>{winner.name}</span> win the auction!
@@ -53,7 +59,7 @@ export default function Results() {
           <p className="mt-2 text-slate-400">
             {winner.id === humanId
               ? "That's you. Take a bow, chairman."
-              : `You finished #${humanRank} of 4.`}
+              : `You finished #${humanRank} of ${auction.franchises.length}.`}
           </p>
           <div className="mt-4 flex justify-center gap-3">
             <button onClick={share}
@@ -77,7 +83,7 @@ export default function Results() {
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: rank * 0.1 }}
-                className={`rounded-2xl border bg-slate-900/70 p-4 ${rank === 0 ? "border-amber-500/50" : "border-slate-800"}`}
+                className={`rounded-2xl border bg-slate-950/75 p-4 backdrop-blur-md ${rank === 0 ? "border-amber-500/50" : "border-slate-800"}`}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-black text-slate-500">#{rank + 1}</span>
@@ -94,7 +100,7 @@ export default function Results() {
                   {s.bonus > 0 && <span className="text-emerald-400"> + {s.bonus} balance</span>}
                 </p>
                 <p className="mt-1.5 text-xs text-slate-400">
-                  {f.squad.length}/15 · ✈ {overseasCount(f.squad)}/6 · spent {money(s.spent)} · left {money(f.budget)}
+                  {f.squad.length}/{SQUAD_MAX} · ✈ {overseasCount(f.squad)}/{OVERSEAS_MAX} · spent {money(s.spent)} · left {money(f.budget)}
                 </p>
                 {Object.keys(needs).length > 0 && (
                   <p className="mt-1 text-xs font-bold text-red-400">

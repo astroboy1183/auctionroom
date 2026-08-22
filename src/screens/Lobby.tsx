@@ -6,6 +6,7 @@ import { makeDefaultFranchises } from "../engine/franchises";
 import { useGameStore, type Difficulty } from "../store/gameStore";
 import { money } from "../components/format";
 import { START_BUDGET } from "../engine/franchises";
+import HallBackdrop from "../components/HallBackdrop";
 
 const FRANCHISES = makeDefaultFranchises();
 const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
@@ -20,8 +21,13 @@ export default function Lobby() {
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 py-10 text-slate-100">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 text-slate-100">
+      <HallBackdrop mode="idle" />
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg rounded-2xl bg-slate-950/70 p-6 backdrop-blur-md"
+      >
         <h1 className="text-center text-5xl font-black tracking-tight">
           Auction<span className="text-amber-400">Room</span>
         </h1>
@@ -70,6 +76,7 @@ export default function Lobby() {
 
         <motion.button
           whileTap={{ scale: 0.97 }}
+          onMouseEnter={() => void import("../scene/Hall")}
           onClick={() => startGame(picked, difficulty)}
           className="mt-8 w-full rounded-xl bg-amber-500 py-3.5 text-lg font-black text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
         >

@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import type { Franchise, Role } from "../engine/types";
-import { unfilledNeeds, MIN_ROLES } from "../engine/rules";
+import { unfilledNeeds, MIN_ROLES, SQUAD_MAX } from "../engine/rules";
 import { START_BUDGET } from "../engine/franchises";
 import { money } from "./format";
 
@@ -32,7 +32,7 @@ export default function SquadDrawer({ franchise: f, onClose }: { franchise: Fran
           <button onClick={onClose} className="rounded bg-slate-800 px-2 py-1 text-sm hover:bg-slate-700">✕</button>
         </div>
         <p className="mt-1 text-xs text-slate-400">
-          {f.squad.length}/15 players · spent {money(START_BUDGET - f.budget)} · {money(f.budget)} left
+          {f.squad.length}/{SQUAD_MAX} players · spent {money(START_BUDGET - f.budget)} · {money(f.budget)} left
         </p>
 
         {ROLE_ORDER.map((role) => {

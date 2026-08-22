@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { useGameStore } from "../store/gameStore";
 import {
   blip, clockTick, crowdSwell, hammer, hushAuctioneer, moneySpeech, motif,
-  paddle, speak, speakTeam, startCrowd, sting, stopCrowd, teamVoice,
+  outbid as outbidCue, paddle, speak, speakTeam, startCrowd, sting, stopCrowd, teamVoice,
 } from "../lib/audio";
 import type { Role } from "../engine/types";
 
@@ -43,6 +43,7 @@ export function useSoundEffects() {
     playerId: auction.currentPlayer?.id,
     setId: auction.currentPlayer?.setId,
     bid: auction.currentBid,
+    bidderId: auction.currentBidderId,
     phase: auction.phase,
     timer: auction.timer,
   });
@@ -64,10 +65,28 @@ export function useSoundEffects() {
       playerId: player?.id,
       setId: player?.setId,
       bid: auction.currentBid,
+      bidderId: auction.currentBidderId,
       phase: auction.phase,
       timer: auction.timer,
     };
+
+    // Losing the lead is its own event — flagged even when muted, because the
+    // rail flash and toast are visual.
+    const lostLead =
+      auction.phase === "bidding" &&
+      p.bidderId === humanId &&
+      auction.currentBidderId !== null &&
+      auction.currentBidderId !== humanId;
+    if (lostLead) {
+      const rival = auction.franchises.find((f) => f.id === auction.currentBidderId);
+      if (rival) useGameStore.getState().flagOutbid(rival.name, rival.color);
+    }
+
     if (!soundOn) return;
+    if (lostLead) {
+      outbidCue();
+      return; // its own cue replaces the ordinary bid knock
+    }
 
     // A new man on the block — and a motif when a whole new set opens.
     if (auction.phase === "bidding" && player && player.id !== p.playerId) {

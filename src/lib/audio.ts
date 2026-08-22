@@ -139,6 +139,17 @@ export function hammer(): void {
   struck(300, { dur: 0.28, vol: 0.14, partials: [1, 3.1], decay: [1, 0.2], attack: 0.002 });
 }
 
+/** You just lost the lead: a sour descending minor second. Deliberately
+ * unlike the bid knock, so it is recognisable the first time you hear it. */
+export function outbid(): void {
+  struck(415.3, { dur: 0.5, vol: 0.2, partials: [1, 2.02], decay: [1, 0.3], attack: 0.008 });
+  setTimeout(
+    () => struck(392, { dur: 0.85, vol: 0.22, partials: [1, 2.02, 3.4], decay: [1, 0.35, 0.12], attack: 0.01 }),
+    110,
+  );
+  noiseHit({ dur: 0.2, vol: 0.06, from: 900, to: 200, wetAmount: 0.9 });
+}
+
 /** Passing: a soft descending breath. */
 export function whoosh(): void {
   noiseHit({ dur: 0.34, vol: 0.09, from: 1800, to: 260, q: 0.7, wetAmount: 0.8 });
