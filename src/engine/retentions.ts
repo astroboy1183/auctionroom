@@ -61,3 +61,38 @@ export function applyRetentions(
 export function retentionSpend(perTeam: number): number {
   return RETENTION_COSTS.slice(0, perTeam).reduce((a, b) => a + b, 0);
 }
+
+
+// --------------------------------------------------------------- formats
+
+import type { AuctionFormat } from "./sets";
+
+/** Rating shown to the player. Mystery format hides it entirely. */
+export const HIDDEN_RATING = -1;
+
+/**
+ * Reshape a pool for the chosen format. Bidding rules never change — only
+ * which players come up, in what order, and what you can see about them.
+ */
+export function applyFormat(pool: Player[], format: AuctionFormat): Player[] {
+  switch (format) {
+    case "sprint":
+      // Top half by rating: a shorter, sharper auction with no filler.
+      return [...pool].sort((a, b) => b.rating - a.rating).slice(0, Math.ceil(pool.length / 2));
+    case "mystery":
+      // The engine and bots still see the real rating; the UI does not.
+      return pool.map((p) => ({ ...p, tags: [...p.tags] }));
+    case "reverse":
+      // Invert the set order so the bargain bin comes first and the stars
+      // arrive when purses are already committed.
+      return [...pool].reverse();
+    case "classic":
+    default:
+      return pool;
+  }
+}
+
+/** Should the UI hide this player's rating? */
+export function ratingHidden(format: AuctionFormat): boolean {
+  return format === "mystery";
+}

@@ -8,7 +8,8 @@ import { createInitialState } from "../engine/simulate";
 import { makeDefaultFranchises } from "../engine/franchises";
 import { attachBotPersonalities } from "../engine/bots";
 import { assignFormerPlayers } from "../engine/rtm";
-import { applyRetentions, auctionPool } from "../engine/retentions";
+import { applyRetentions, applyFormat, auctionPool } from "../engine/retentions";
+import type { AuctionFormat } from "../engine/sets";
 import { finishAuction } from "../engine/autoplay";
 import {
   applyForm, autoRetain, closeSeason, newCareer, purseAfterRetentions,
@@ -48,8 +49,10 @@ interface GameStore {
   playerName: string;
   /** Non-null while playing a career; null for one-off auctions. */
   career: Career | null;
+  format: AuctionFormat;
   dispatch: (event: AuctionEvent) => void;
   startGame: (humanId: string, difficulty: Difficulty, seed?: number) => void;
+  setFormat: (format: AuctionFormat) => void;
   resumeGame: () => boolean;
   /** Run an entire auction start-to-finish without bidding, then show results. */
   simulateWholeAuction: (humanId: string, difficulty: Difficulty, seed?: number) => void;
@@ -90,6 +93,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   roomCode: null,
   playerName: "",
   career: null,
+  format: "classic",
   preview: applyRetentions(makeDefaultFranchises(), allPlayers, LOBBY_SEED + 3),
   dispatch: (event) => set((s) => ({ auction: applyEvent(s.auction, event) })),
   startGame: (humanId, difficulty, replaySeed) =>
@@ -105,11 +109,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       franchises = applyRetentions(franchises, allPlayers, (replaySeed ?? lobbySeed) + 3);
       franchises = attachBotPersonalities(franchises, DIFFICULTY_MULT[difficulty], seed + 2);
       franchises = assignFormerPlayers(franchises, players, seed + 1);
-      const lobby = createInitialState(players, franchises);
+      const lobby = createInitialState(applyFormat(players, get().format), franchises);
       return { humanId, difficulty, skipping: false, outbid: null, auction: applyEvent(lobby, { type: "START", seed }) };
     }),
   toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
   toggleView3d: () => set((s) => ({ view3d: !s.view3d })),
+  setFormat: (format) => set({ format }),
   setSkipping: (v) => set({ skipping: v }),
   flagOutbid: (by, color) => set({ outbid: { by, color, at: Date.now() } }),
   clearOutbid: () => set({ outbid: null }),

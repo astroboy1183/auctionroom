@@ -12,6 +12,8 @@ import { money } from "../components/format";
 import { SQUAD_MAX } from "../engine/rules";
 import Portrait from "../components/Portrait";
 import Stars from "../components/Stars";
+import TradeWindow from "./TradeWindow";
+import { AnimatePresence } from "motion/react";
 
 export default function SeasonEnd({ onClose }: { onClose: () => void }) {
   const auction = useGameStore((s) => s.auction);
@@ -22,6 +24,7 @@ export default function SeasonEnd({ onClose }: { onClose: () => void }) {
 
   const me = auction.franchises.find((f) => f.id === humanId)!;
   const [keep, setKeep] = useState<string[]>([]);
+  const [trading, setTrading] = useState(false);
 
   const squad = useMemo(
     () => [...me.squad].sort((a, b) => effectiveRating(b, career) - effectiveRating(a, career)),
@@ -108,6 +111,13 @@ export default function SeasonEnd({ onClose }: { onClose: () => void }) {
           })}
         </ul>
 
+        <button
+          onClick={() => setTrading(true)}
+          className="mt-4 w-full rounded-xl border border-slate-700 py-2 text-xs font-bold text-slate-300 hover:bg-slate-800"
+        >
+          ⇄ Open the transfer window
+        </button>
+
         <div className="mt-5 flex gap-3">
           <button
             onClick={() => { advanceSeason(keep); onClose(); }}
@@ -123,6 +133,9 @@ export default function SeasonEnd({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </motion.div>
+      <AnimatePresence>
+        {trading && <TradeWindow onClose={() => setTrading(false)} />}
+      </AnimatePresence>
     </motion.div>
   );
 }

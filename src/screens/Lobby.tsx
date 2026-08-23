@@ -9,9 +9,11 @@ import { START_BUDGET } from "../engine/franchises";
 import HallBackdrop from "../components/HallBackdrop";
 import ShortlistPlanner from "./ShortlistPlanner";
 import { createRoom } from "../hooks/useRoom";
+import { FORMATS } from "../engine/sets";
 import { loadGame } from "../lib/persist";
 import HowToPlay, { hasSeenHowTo } from "../components/HowToPlay";
 import SoundMixer, { loadMix } from "../components/SoundMixer";
+import Leaderboard from "./Leaderboard";
 import { setMix } from "../lib/audio";
 
 const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
@@ -24,6 +26,8 @@ export default function Lobby() {
   const startGame = useGameStore((s) => s.startGame);
   const simulateWholeAuction = useGameStore((s) => s.simulateWholeAuction);
   const startCareer = useGameStore((s) => s.startCareer);
+  const format = useGameStore((s) => s.format);
+  const setFormat = useGameStore((s) => s.setFormat);
   const [picked, setPicked] = useState("hyd");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [planning, setPlanning] = useState(false);
@@ -36,6 +40,7 @@ export default function Lobby() {
   const [seedInput, setSeedInput] = useState("");
   const [howTo, setHowTo] = useState(() => !hasSeenHowTo());
   const [mixer, setMixer] = useState(false);
+  const [board, setBoard] = useState(false);
   // Restore the saved mix once, before anything makes a sound.
   useState(() => setMix(loadMix()));
 
@@ -104,6 +109,24 @@ export default function Lobby() {
               <span className="mt-0.5 block text-[10px] font-mono text-slate-500">
                 purse {money(f.budget)}
               </span>
+            </button>
+          ))}
+        </div>
+
+        <h2 className="mt-6 text-xs font-black uppercase tracking-widest text-slate-500">Format</h2>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {FORMATS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFormat(f.id)}
+              className={`rounded-xl border p-2 text-left transition ${
+                format === f.id
+                  ? "border-amber-500/60 bg-slate-800"
+                  : "border-slate-800 bg-slate-900/60 hover:bg-slate-800/60"
+              }`}
+            >
+              <span className="block text-sm font-bold">{f.name}</span>
+              <span className="mt-0.5 block text-[10px] leading-tight text-slate-500">{f.blurb}</span>
             </button>
           ))}
         </div>
@@ -212,6 +235,8 @@ export default function Lobby() {
           <button onClick={() => setHowTo(true)} className="hover:text-slate-300">How to play</button>
           <span>·</span>
           <button onClick={() => setMixer(true)} className="hover:text-slate-300">Sound</button>
+          <span>·</span>
+          <button onClick={() => setBoard(true)} className="hover:text-slate-300">Hall of fame</button>
         </div>
         <p className="mt-3 text-center text-[10px] text-slate-600">
           Fictional franchises · unofficial fan game · players shown with public role/stat info only
@@ -225,6 +250,9 @@ export default function Lobby() {
       </AnimatePresence>
       <AnimatePresence>
         {mixer && <SoundMixer onClose={() => setMixer(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {board && <Leaderboard onClose={() => setBoard(false)} />}
       </AnimatePresence>
     </div>
   );

@@ -6,6 +6,8 @@ import type { Player, Role } from "../engine/types";
 import { money } from "./format";
 import Stars from "./Stars";
 import Portrait from "./Portrait";
+import { useGameStore } from "../store/gameStore";
+import { ratingHidden } from "../engine/retentions";
 
 const ROLE_LABEL: Record<Role, string> = {
   BAT: "Batter", BOWL: "Bowler", AR: "All-Rounder", WK: "Keeper",
@@ -15,6 +17,7 @@ const ROLE_COLOR: Record<Role, string> = {
 };
 
 export default function LowerThird({ player, ceiling }: { player: Player; ceiling?: number }) {
+  const hidden = ratingHidden(useGameStore((s) => s.format));
   return (
     <motion.div
       key={player.id}
@@ -35,8 +38,14 @@ export default function LowerThird({ player, ceiling }: { player: Player; ceilin
           )}
           <span style={{ color: ROLE_COLOR[player.role] }}>{ROLE_LABEL[player.role]}</span>
           {player.overseas && <span className="text-indigo-300">✈ Overseas</span>}
-          <Stars rating={player.rating} />
-          <span className="font-mono text-slate-500">{player.rating}</span>
+          {hidden ? (
+            <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-violet-300">rating hidden</span>
+          ) : (
+            <>
+              <Stars rating={player.rating} />
+              <span className="font-mono text-slate-500">{player.rating}</span>
+            </>
+          )}
         </div>
         <h2 className="mt-0.5 text-2xl font-black leading-none tracking-tight sm:text-3xl">
           {player.name}

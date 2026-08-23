@@ -25,3 +25,21 @@ export const SET_SIZES: Record<string, number> = {
 };
 
 export const POOL_SIZE = 100;
+
+
+/** Alternative auction formats. Each reshapes the pool; the reducer is
+ * untouched, so bidding, RTM and soft-lock behave identically in all of them. */
+export type AuctionFormat = "classic" | "sprint" | "mystery" | "reverse";
+
+export interface FormatInfo {
+  id: AuctionFormat;
+  name: string;
+  blurb: string;
+}
+
+export const FORMATS: FormatInfo[] = [
+  { id: "classic", name: "Classic", blurb: "12 sets, marquee first — the real thing" },
+  { id: "sprint", name: "Sprint", blurb: "half the pool, straight to the good players" },
+  { id: "mystery", name: "Mystery", blurb: "ratings hidden — bid on role and tags alone" },
+  { id: "reverse", name: "Reverse", blurb: "the cheap players go first; stars come last" },
+];

@@ -36,6 +36,67 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-039 — Trading, formats and mystery lots
+**2026-08-21.** A between-seasons transfer window generates offers using the
+*same* valuation the bots bid with, so it reads as negotiating with the
+opponents you just faced rather than shopping. Bots only offer for players they
+rate above your own valuation of them.
+**Bug caught by the tests:** offers were generated without checking legality,
+so the window happily presented trades that breached the overseas cap. Every
+generated offer now passes `canTrade()` for **both** squads before it is shown.
+**Formats** reshape the pool only — the reducer, bidding, RTM and soft-lock are
+untouched in all four. Sprint keeps the top half by rating; Reverse flips the
+order so the bargain bin comes first and stars arrive when purses are already
+committed; Mystery hides ratings **in the UI only** — the engine and bots still
+see the truth, otherwise bot valuation would collapse.
+
+## D-038 — Career mode: seasons that remember
+**2026-08-21.** Squads carry over, you retain up to 3 on a rising cost ladder
+that shrinks next season's purse, and players accrue real batting and bowling
+records from every match including playoffs.
+**Form drift is deliberately gentle and bounded:** strike rate and economy are
+compared against a neutral bar, the delta is clamped to ±3 per season, and old
+form decays at 0.6 before new form is added, with a hard ±8 total cap. A good
+season nudges a player; it never rewrites them into a 130-rated freak.
+**Verified end to end:** kept Bumrah and Pant into season 2, purse correctly
+₹96 Cr, both removed from that season's auction pool, and 80 players carrying
+form earned on the field.
+
+## D-037 — Playoffs, scorecards, and watching the closing overs
+**2026-08-21.** The season now ends in an IPL-style knockout — Qualifier 1,
+Eliminator, Qualifier 2, Final — so topping the table buys a second chance
+rather than the trophy, and the league leader can lose the title (tested).
+**The bigger win is surfacing what already existed.** The match engine had
+always produced full scorecards and the UI discarded them. `match.ts` now also
+records a ball-by-ball `timeline`, and every league and playoff match opens a
+scorecard: both innings with R/B/4s/6s/SR and O/R/W/Econ, player of the match,
+and a **Watch** button that plays the closing overs back one delivery at a time.
+The hard part was already built; the UI was throwing it away.
+
+## D-036 — Onboarding, sound mixer, adaptive 3D quality
+**2026-08-21.** The game accumulated rules that are not guessable — soft-lock
+reserves, three-stage RTM, retentions, ceilings, the four-over cap — so a
+five-page explainer runs once on first visit and stays available from the lobby.
+The single mute became a four-channel mixer (overall / voices / effects /
+crowd), persisted, because the commonest ask with eight franchise voices is
+"keep the game sounds, lose the talking". 3D quality now caps DPR and drops
+antialiasing up front on low-core, low-memory or narrow devices rather than
+waiting for the frame rate to collapse.
+
+## D-035 — Room settings, persistence and a cross-room leaderboard
+**v2, 2026-08-21.** The host picks difficulty and clock length (clamped 6–30s,
+locked once the auction starts); everyone sees changes live. A custom clock is
+applied by topping up the timer after each bid rather than by parameterising
+the engine's constants — presentation-layer pacing, engine untouched (D-002).
+A well-known `__leaderboard__` Durable Object collects the top 50 human results
+across every room. Seat reclaim on reconnect verified against production.
+
+## D-034 — Skip the entire auction from the lobby
+**User request, 2026-08-21.** "Skip pool" only existed mid-auction. The lobby
+now offers a one-click full simulation: your assistant plays your seat under
+your shortlist ceilings and jumps straight to the season. Useful on its own and
+essential in career mode, where you may want to fast-forward a year.
+
 ## D-033 — LLM commentary on Haiku 4.5, dormant unless a key is set
 **v2, 2026-08-21.** The rooms worker can call Claude for one line of colour
 commentary at interesting moments — a big sale, an RTM steal, a new set, the
