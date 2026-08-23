@@ -9,8 +9,26 @@ export interface Seat {
   connected: boolean;
 }
 
+export interface ChatEntry {
+  id: string;
+  franchiseId: string | null;   // null = a spectator
+  name: string;
+  text: string;
+  at: number;
+}
+
+export interface ReactionEvent {
+  franchiseId: string | null;
+  emoji: string;
+  at: number;
+}
+
+export const REACTIONS = ["🔥", "😱", "😂", "👏", "💸", "🤝"] as const;
+
 export type ClientMessage =
-  | { type: "join"; name: string; token?: string }
+  | { type: "join"; name: string; token?: string; spectate?: boolean }
+  | { type: "chat"; text: string }
+  | { type: "react"; emoji: string }
   | { type: "start" }
   | { type: "bid" }
   | { type: "pass" }
@@ -19,8 +37,11 @@ export type ClientMessage =
   | { type: "rtm_decide"; match: boolean };
 
 export type ServerMessage =
-  | { type: "welcome"; token: string; franchiseId: string; roomCode: string; isHost: boolean }
-  | { type: "state"; auction: AuctionState; seats: Seat[]; hostId: string | null }
+  | { type: "welcome"; token: string; franchiseId: string | null; roomCode: string; isHost: boolean; spectating: boolean }
+  | { type: "state"; auction: AuctionState; seats: Seat[]; hostId: string | null; spectators: number }
+  | { type: "chat"; entry: ChatEntry }
+  | { type: "chat_history"; entries: ChatEntry[] }
+  | { type: "react"; event: ReactionEvent }
   | { type: "error"; message: string };
 
 /** Unambiguous room codes — no O/0/I/1. */

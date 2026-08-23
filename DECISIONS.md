@@ -36,6 +36,78 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-032 — Accessibility, DOM portraits, mobile room polish
+**2026-08-21.** `prefers-reduced-motion` collapses every animation while
+leaving the game fully playable; a visible `:focus-visible` ring matters
+because the auction is fully operable on Space/P/S. The bid HUD gained
+`role`/`aria-label`/`aria-keyshortcuts` and an `aria-live` standing bid, so a
+screen reader hears the price climb. `drawPortrait` moved from `scene/Hall`
+into `lib/portrait.ts` and is now shared: the 3D jumbotron and the DOM
+`<Portrait>` (lower-third, squad drawer) render the same likeness for a player.
+Room lobby seat rows truncate and drop secondary columns under `sm:`.
+
+## D-031 — Adaptive bots read the room
+**2026-08-21.** `rivalPressure()` counts how many *other* franchises still
+need a role that is running short, and raises a bot's ceiling by up to 30%
+scaled by its own aggression. Sharks squeeze; the Accountant ignores it.
+**Why:** the late auction had become a quiet bargain hunt once the marquee
+sets were gone. Now a bot will push a price it doesn't need purely because a
+rival is desperate — draining purses is a legitimate strategy and it keeps the
+back half of the auction tense. Balance held: 96/96 minimums met, avg ₹9.2 Cr.
+
+## D-030 — Chat, reactions and spectators
+**v2, 2026-08-21.** The room DO carries a 60-message chat backlog (persisted,
+shipped on join) plus ephemeral emoji reactions (broadcast, never stored).
+**Spectators** join without a seat: `franchiseId: null`, may chat and react,
+are refused any auction intent server-side, and are counted in the state
+broadcast. A *full* room now admits newcomers as spectators rather than
+rejecting them. Watch links are `?room=CODE&spectate=1`.
+Chat lives in a collapsible panel with an unread badge, because a ten-second
+clock leaves no room for a permanent chat column — the one-tap reaction row is
+the primary channel and typing is the fallback.
+
+## D-029 — Save/resume, replay-by-seed, keyboard control
+**2026-08-21.** Autosave writes to localStorage on **lot boundaries**, not
+every tick: writes stay rare and a resumed game always begins cleanly on a
+fresh player. The save carries a version stamp so a build change discards old
+saves instead of crashing on them. Replay-by-seed exposes `rngSeed` on the
+results screen and accepts one in the lobby — the engine's determinism (D-002)
+means the same seed reproduces the pool, the retentions and every bot
+decision. Space bids, P passes, S skips; keys are ignored inside inputs.
+
+## D-028 — "Skip the pool": autoplay finishes the auction
+**User request, 2026-08-21.** A ⏭ button hands the remaining lots to the
+simulation and jumps to the result.
+**The key call:** the player's franchise **keeps bidding**, played by the
+shared bot brain under an "Your assistant" personality, and it will not exceed
+any shortlist ceiling the player set. Simply removing them would leave a
+half-built squad that then loses the tournament on structural penalties —
+punishing them for using a convenience feature rather than for any decision
+they made. The seat is handed back as `isHuman` before results so the summary
+still reads as their team.
+Solo only: online rooms are server-authoritative and cannot be fast-forwarded
+by one participant.
+
+## D-027b — Ball-by-ball cricket replaces the strength formula
+**2026-08-21.** `match.ts` plays real T20 innings: 120 balls, per-delivery
+outcomes weighted by batter-vs-bowler edge and phase, wickets, strike
+rotation, chases whose aggression scales with the required rate, and full
+scorecards.
+**The four-over cap is the point.** A legal 12-player squad need only carry
+3 BOWL + 1 AR — four bowlers, who can bowl 16 of 20 overs. Somebody's batter
+bowls the rest, and `bowlingRating()` docks a pure batter 34 points, so a thin
+attack visibly leaks runs. Skimping on bowling at the auction now costs
+matches, which is exactly the connection the old formula lacked.
+Phase-sensitive tags finally matter: `opener` in the powerplay, `death-bowler`
+and `finisher` at the death, `new-ball` up front, spin through the middle.
+**`squadStrength()` was rewritten** to predict this rather than the old model —
+it now sizes the attack at exactly five bowlers including any part-timer.
+**Honest calibration note:** bot auctions spread talent within ~5 strength
+points across eight squads, so no team dominates a 7-match season. The test
+asserts the correlation that actually holds — the stronger half wins clearly
+more titles than the weaker half — rather than "the best squad wins", which
+would have been false.
+
 ## D-026 — Post-auction tournament decides the winner
 **v1, 2026-08-21.** The results screen used to declare a winner from Σ ratings
 plus balance bonuses — a number with no meaning attached. Now every squad plays

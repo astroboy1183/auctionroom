@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import type { Player, Role } from "../engine/types";
 import { money } from "./format";
 import Stars from "./Stars";
+import Portrait from "./Portrait";
 
 const ROLE_LABEL: Record<Role, string> = {
   BAT: "Batter", BOWL: "Bowler", AR: "All-Rounder", WK: "Keeper",
@@ -23,7 +24,9 @@ export default function LowerThird({ player, ceiling }: { player: Player; ceilin
       className="pointer-events-none overflow-hidden rounded-lg bg-gradient-to-r from-slate-950/92 via-slate-950/85 to-slate-950/40 backdrop-blur-md"
       style={{ borderLeft: `4px solid ${ROLE_COLOR[player.role]}` }}
     >
-      <div className="px-3.5 py-2.5">
+      <div className="flex items-center gap-3 px-3.5 py-2.5">
+        <Portrait player={player} size={54} className="hidden ring-2 ring-white/10 sm:block" />
+        <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
           {ceiling !== undefined && (
             <span className="rounded bg-amber-500 px-1.5 py-0.5 text-slate-950">
@@ -43,6 +46,7 @@ export default function LowerThird({ player, ceiling }: { player: Player; ceilin
             <span key={t} className="rounded bg-white/10 px-1.5 py-0.5 text-slate-300">{t}</span>
           ))}
           <span className="text-slate-500">base {money(player.basePrice)}</span>
+        </div>
         </div>
       </div>
     </motion.div>

@@ -46,6 +46,24 @@ export function rawValueEstimate(state: AuctionState, franchise: Franchise, play
   return Math.round(value);
 }
 
+/**
+ * How badly the *rest of the room* needs this player. A bot that sees rivals
+ * short of a scarce role will happily push the price up: it either lands a
+ * player it wanted anyway, or drains a rival's purse. This is what stops the
+ * late auction from being a quiet bargain hunt.
+ */
+export function rivalPressure(state: AuctionState, franchise: Franchise, player: Player): number {
+  const supply = remainingPool(state).filter((x) => x.role === player.role).length;
+  let desperateRivals = 0;
+  for (const f of state.franchises) {
+    if (f.id === franchise.id) continue;
+    if (f.squad.length >= SQUAD_MAX) continue;
+    const need = unfilledNeeds(f.squad)[player.role] ?? 0;
+    if (need > 0 && supply <= need * 3) desperateRivals++;
+  }
+  return Math.min(0.3, desperateRivals * 0.075);
+}
+
 /** Personality-adjusted ceiling this bot will pay for this player. */
 export function adjustedEstimate(state: AuctionState, franchise: Franchise, player: Player): number {
   const p = franchise.botPersonality;
@@ -53,6 +71,8 @@ export function adjustedEstimate(state: AuctionState, franchise: Franchise, play
   if (!p) return raw;
 
   let value = raw;
+  // Aggressive bots read the room and squeeze; disciplined ones ignore it.
+  value *= 1 + rivalPressure(state, franchise, player) * p.aggression;
   if (p.roleObsession === player.role) value *= 1.2;
   if (p.tagObsession && player.tags.includes(p.tagObsession)) value *= 1.15;
   value *= 0.85 + 0.45 * p.aggression;

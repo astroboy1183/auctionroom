@@ -14,6 +14,7 @@ export default function App() {
   const roomCode = useGameStore((s) => s.roomCode);
   const playerName = useGameStore((s) => s.playerName);
   const setRoom = useGameStore((s) => s.setRoom);
+  const spectate = new URLSearchParams(location.search).get("spectate") === "1";
 
   // Deep link: /?room=ABC123 drops you straight into that room.
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function App() {
       <MultiplayerGame
         roomCode={roomCode}
         name={playerName || "Player"}
+        spectate={spectate}
         onLeave={() => {
           setRoom(null);
           history.replaceState(null, "", location.pathname);

@@ -8,15 +8,17 @@ import { useRoom } from "../hooks/useRoom";
 import RoomLobby from "./RoomLobby";
 import AuctionFloor from "./AuctionFloor";
 import Results from "./Results";
+import RoomChat from "../components/RoomChat";
 
 interface Props {
   roomCode: string;
   name: string;
+  spectate?: boolean;
   onLeave: () => void;
 }
 
-export default function MultiplayerGame({ roomCode, name, onLeave }: Props) {
-  const room = useRoom(roomCode, name);
+export default function MultiplayerGame({ roomCode, name, spectate, onLeave }: Props) {
+  const room = useRoom(roomCode, name, spectate);
 
   // Mirror authoritative state into the store so every existing component
   // (rail, HUD, hall, results) works unchanged.
@@ -26,8 +28,10 @@ export default function MultiplayerGame({ roomCode, name, onLeave }: Props) {
   }, [room.auction]);
 
   useEffect(() => {
-    if (room.franchiseId) useGameStore.setState({ humanId: room.franchiseId });
-  }, [room.franchiseId]);
+    // Spectators ride along on the first seat's view; they simply can't act.
+    const view = room.franchiseId ?? room.auction?.franchises[0]?.id;
+    if (view) useGameStore.setState({ humanId: view });
+  }, [room.franchiseId, room.auction]);
 
   // Intents go to the server instead of the local reducer.
   useEffect(() => {
@@ -89,7 +93,22 @@ export default function MultiplayerGame({ roomCode, name, onLeave }: Props) {
           Connection lost — reconnecting. The auction carries on without you.
         </div>
       )}
+      {room.spectating && (
+        <div className="fixed inset-x-0 top-0 z-40 bg-slate-800/90 py-1 text-center text-[11px] font-bold uppercase tracking-widest text-slate-300">
+          👁 Spectating — you can chat, but not bid
+        </div>
+      )}
       {room.auction.phase === "finished" ? <Results /> : <AuctionFloor />}
+
+      <div className="fixed bottom-3 left-3 z-40 sm:bottom-auto sm:left-auto sm:right-3 sm:top-[22rem]">
+        <RoomChat
+          chat={room.chat}
+          reactions={room.reactions}
+          franchises={room.auction.franchises}
+          onSend={(text) => room.send({ type: "chat", text })}
+          onReact={(emoji) => room.send({ type: "react", emoji })}
+        />
+      </div>
     </>
   );
 }

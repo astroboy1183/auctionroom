@@ -22,6 +22,7 @@ export default function RoomLobby({
 }: Props) {
   const humans = seats.filter((s) => s.isHuman).length;
   const shareUrl = `${location.origin}/?room=${roomCode}`;
+  const watchUrl = `${shareUrl}&spectate=1`;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-10 text-slate-100">
@@ -36,13 +37,24 @@ export default function RoomLobby({
 
         <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center">
           <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Room code</p>
-          <p className="font-mono text-4xl font-black tracking-[0.35em] text-amber-300">{roomCode}</p>
-          <button
-            onClick={() => void navigator.clipboard.writeText(shareUrl)}
-            className="mt-2 rounded bg-slate-800 px-3 py-1 text-xs font-bold hover:bg-slate-700"
-          >
-            Copy invite link
-          </button>
+          <p className="font-mono text-3xl font-black tracking-[0.25em] text-amber-300 sm:text-4xl sm:tracking-[0.35em]">
+            {roomCode}
+          </p>
+          <div className="mt-2 flex justify-center gap-2">
+            <button
+              onClick={() => void navigator.clipboard.writeText(shareUrl)}
+              className="rounded bg-slate-800 px-3 py-1 text-xs font-bold hover:bg-slate-700"
+            >
+              Copy invite link
+            </button>
+            <button
+              onClick={() => void navigator.clipboard.writeText(watchUrl)}
+              className="rounded bg-slate-800 px-3 py-1 text-xs font-bold text-slate-400 hover:bg-slate-700"
+              title="For people who just want to watch"
+            >
+              Copy watch link
+            </button>
+          </div>
         </div>
 
         <p className="mt-5 text-xs font-black uppercase tracking-widest text-slate-500">
@@ -58,8 +70,8 @@ export default function RoomLobby({
                 className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${mine ? "bg-amber-500/10 ring-1 ring-amber-500/40" : "bg-slate-900/60"}`}
               >
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: f?.color ?? "#64748b" }} />
-                <span className="font-bold">{f?.name ?? s.franchiseId}</span>
-                <span className={`text-xs ${s.isHuman ? "text-slate-300" : "italic text-slate-500"}`}>
+                <span className="truncate font-bold">{f?.name ?? s.franchiseId}</span>
+                <span className={`hidden truncate text-xs sm:inline ${s.isHuman ? "text-slate-300" : "italic text-slate-500"}`}>
                   {s.name}
                 </span>
                 {mine && <span className="rounded bg-slate-700 px-1 text-[9px] font-black text-amber-300">YOU</span>}
@@ -68,7 +80,7 @@ export default function RoomLobby({
                     {s.connected ? "● online" : "○ away"}
                   </span>
                 )}
-                {f && <span className="ml-auto font-mono text-[10px] text-slate-500">{money(f.budget)}</span>}
+                {f && <span className="ml-auto hidden shrink-0 font-mono text-[10px] text-slate-500 sm:inline">{money(f.budget)}</span>}
               </li>
             );
           })}

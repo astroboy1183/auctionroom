@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AuctionState } from "../engine/types";
-import type { ClientMessage, Seat, ServerMessage } from "../../worker/src/protocol";
+import type { ChatEntry, ClientMessage, ReactionEvent, Seat, ServerMessage } from "../../worker/src/protocol";
 
 const WORKER_URL = import.meta.env.VITE_ROOMS_URL ?? "https://auctionroom-rooms.jayanthapalla.workers.dev";
 
@@ -16,6 +16,10 @@ export interface RoomConnection {
   seats: Seat[];
   franchiseId: string | null;
   isHost: boolean;
+  spectating: boolean;
+  spectators: number;
+  chat: ChatEntry[];
+  reactions: ReactionEvent[];
   error: string | null;
   send: (msg: ClientMessage) => void;
 }
@@ -31,12 +35,16 @@ export async function createRoom(): Promise<string> {
   return code;
 }
 
-export function useRoom(code: string | null, name: string): RoomConnection {
+export function useRoom(code: string | null, name: string, spectate = false): RoomConnection {
   const [status, setStatus] = useState<RoomStatus>("connecting");
   const [auction, setAuction] = useState<AuctionState | null>(null);
   const [seats, setSeats] = useState<Seat[]>([]);
   const [franchiseId, setFranchiseId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
+  const [spectating, setSpectating] = useState(false);
+  const [spectators, setSpectators] = useState(0);
+  const [chat, setChat] = useState<ChatEntry[]>([]);
+  const [reactions, setReactions] = useState<ReactionEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -51,7 +59,7 @@ export function useRoom(code: string | null, name: string): RoomConnection {
       setStatus("open");
       // A stored token reclaims the same franchise after a refresh or a drop.
       const token = sessionStorage.getItem(tokenKey(code)) ?? undefined;
-      ws.send(JSON.stringify({ type: "join", name, token } satisfies ClientMessage));
+      ws.send(JSON.stringify({ type: "join", name, token, spectate } satisfies ClientMessage));
     };
 
     ws.onmessage = (ev) => {
@@ -62,12 +70,22 @@ export function useRoom(code: string | null, name: string): RoomConnection {
         return;
       }
       if (msg.type === "welcome") {
-        sessionStorage.setItem(tokenKey(code), msg.token);
+        if (msg.token) sessionStorage.setItem(tokenKey(code), msg.token);
         setFranchiseId(msg.franchiseId);
         setIsHost(msg.isHost);
+        setSpectating(msg.spectating);
       } else if (msg.type === "state") {
         setAuction(msg.auction);
         setSeats(msg.seats);
+        setSpectators(msg.spectators);
+      } else if (msg.type === "chat_history") {
+        setChat(msg.entries);
+      } else if (msg.type === "chat") {
+        setChat((c) => [...c, msg.entry].slice(-60));
+      } else if (msg.type === "react") {
+        // Reactions are transient: they float up and expire.
+        setReactions((r) => [...r, msg.event].slice(-12));
+        setTimeout(() => setReactions((r) => r.filter((x) => x !== msg.event)), 2600);
       } else if (msg.type === "error") {
         setError(msg.message);
       }
@@ -80,12 +98,12 @@ export function useRoom(code: string | null, name: string): RoomConnection {
       wsRef.current = null;
       ws.close();
     };
-  }, [code, name]);
+  }, [code, name, spectate]);
 
   const send = useCallback((msg: ClientMessage) => {
     const ws = wsRef.current;
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
   }, []);
 
-  return { status, auction, seats, franchiseId, isHost, error, send };
+  return { status, auction, seats, franchiseId, isHost, spectating, spectators, chat, reactions, error, send };
 }

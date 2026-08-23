@@ -5,6 +5,7 @@ import type { Franchise, Role } from "../engine/types";
 import { unfilledNeeds, MIN_ROLES, SQUAD_MAX } from "../engine/rules";
 import { START_BUDGET } from "../engine/franchises";
 import { money } from "./format";
+import Portrait from "./Portrait";
 
 const ROLE_ORDER: Role[] = ["BAT", "BOWL", "AR", "WK"];
 const ROLE_LABEL: Record<Role, string> = {
@@ -49,6 +50,7 @@ export default function SquadDrawer({ franchise: f, onClose }: { franchise: Fran
               <ul className="mt-1.5 space-y-1 text-sm">
                 {inRole.map((p) => (
                   <li key={p.id} className="flex items-center gap-2">
+                    <Portrait player={p} size={26} />
                     <span>{p.name}</span>
                     {f.retained.includes(p.id) && (
                       <span className="rounded bg-violet-500/20 px-1 text-[9px] font-bold text-violet-300">RET</span>

@@ -7,6 +7,58 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useGameStore } from "../store/gameStore";
+import { drawPortrait } from "../lib/portrait";
+
+/** Five-pointed star as a canvas path — text glyphs are unreliable here
+ * (★/☆ pick up colour-emoji fonts and there is no dependable half-star
+ * character), so the board draws its own. */
+function starPath(g: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const radius = i % 2 === 0 ? r : r * 0.45;
+    const a = (Math.PI / 5) * i - Math.PI / 2;
+    const x = cx + Math.cos(a) * radius;
+    const y = cy + Math.sin(a) * radius;
+    if (i === 0) g.moveTo(x, y);
+    else g.lineTo(x, y);
+  }
+  g.closePath();
+}
+
+/** Five stars for a 60–100 rating, to the nearest half. Returns the width. */
+function drawStars(g: CanvasRenderingContext2D, x: number, y: number, rating: number, r = 17): number {
+  const value = Math.max(0, Math.min(5, Math.round(((rating - 60) / 40) * 10) / 2));
+  const gap = r * 2.35;
+  for (let i = 0; i < 5; i++) {
+    const cx = x + r + i * gap;
+    const filled = value >= i + 1;
+    const half = !filled && value >= i + 0.5;
+    starPath(g, cx, y, r);
+    g.strokeStyle = "#fbbf24";
+    g.lineWidth = r * 0.22;
+    g.lineJoin = "round";
+    if (filled) {
+      g.fillStyle = "#fbbf24";
+      g.fill();
+    } else if (half) {
+      g.save();
+      g.beginPath();
+      g.rect(cx - r, y - r, r, r * 2);
+      g.clip();
+      starPath(g, cx, y, r);
+      g.fillStyle = "#fbbf24";
+      g.fill();
+      g.restore();
+      starPath(g, cx, y, r);
+    } else {
+      g.globalAlpha = 0.4;
+    }
+    g.stroke();
+    g.globalAlpha = 1;
+  }
+  return 5 * gap;
+}
+
 
 // ---------------------------------------------------------------- helpers
 
@@ -133,208 +185,6 @@ function Auctioneer() {
 }
 
 // ------------------------------------------------------------- jumbotron
-
-/** Deterministic 32-bit hash of a player id, so a given cricketer always
- * gets the same generated likeness. */
-function hashId(id: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < id.length; i++) {
-    h ^= id.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-/** Five-pointed star as a canvas path — text glyphs are unreliable here
- * (★/☆ pick up colour-emoji fonts and there is no dependable half-star
- * character), so the board draws its own. */
-function starPath(g: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-  g.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const radius = i % 2 === 0 ? r : r * 0.45;
-    const a = (Math.PI / 5) * i - Math.PI / 2;
-    const x = cx + Math.cos(a) * radius;
-    const y = cy + Math.sin(a) * radius;
-    if (i === 0) g.moveTo(x, y);
-    else g.lineTo(x, y);
-  }
-  g.closePath();
-}
-
-/** Five stars for a 60–100 rating, to the nearest half. Returns the width. */
-function drawStars(g: CanvasRenderingContext2D, x: number, y: number, rating: number, r = 17): number {
-  const value = Math.max(0, Math.min(5, Math.round(((rating - 60) / 40) * 10) / 2));
-  const gap = r * 2.35;
-  for (let i = 0; i < 5; i++) {
-    const cx = x + r + i * gap;
-    const filled = value >= i + 1;
-    const half = !filled && value >= i + 0.5;
-    starPath(g, cx, y, r);
-    g.strokeStyle = "#fbbf24";
-    g.lineWidth = r * 0.22;
-    g.lineJoin = "round";
-    if (filled) {
-      g.fillStyle = "#fbbf24";
-      g.fill();
-    } else if (half) {
-      g.save();
-      g.beginPath();
-      g.rect(cx - r, y - r, r, r * 2);
-      g.clip();
-      starPath(g, cx, y, r);
-      g.fillStyle = "#fbbf24";
-      g.fill();
-      g.restore();
-      starPath(g, cx, y, r);
-    } else {
-      g.globalAlpha = 0.4;
-    }
-    g.stroke();
-    g.globalAlpha = 1;
-  }
-  return 5 * gap;
-}
-
-const SKIN = ["#8d5524", "#a86b3c", "#c68642", "#e0ac69", "#f1c27d", "#7a4620"];
-const KIT = ["#1d4ed8", "#b91c1c", "#047857", "#7c3aed", "#c2410c", "#0e7490"];
-
-/**
- * A stylised head-and-shoulders portrait generated from the player's id —
- * skin tone, kit colour, hair, beard and headgear all derived from the hash,
- * with a role-appropriate prop. Real photographs are deliberately not used:
- * they are rights-encumbered, and the hall is asset-free and offline (D-013).
- */
-function drawPortrait(
-  g: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  r: number,
-  player: { id: string; role: string; overseas: boolean },
-): void {
-  const h = hashId(player.id);
-  const skin = SKIN[h % SKIN.length];
-  const kit = KIT[(h >> 3) % KIT.length];
-  const hasBeard = ((h >> 6) & 3) > 1;
-  const capped = ((h >> 8) & 3) > 0;
-  const hair = ((h >> 10) & 1) ? "#1c1917" : "#292524";
-
-  g.save();
-  // roundel
-  g.beginPath();
-  g.arc(cx, cy, r, 0, Math.PI * 2);
-  const grad = g.createLinearGradient(cx, cy - r, cx, cy + r);
-  grad.addColorStop(0, "#1e293b");
-  grad.addColorStop(1, "#0b1220");
-  g.fillStyle = grad;
-  g.fill();
-  g.strokeStyle = kit;
-  g.lineWidth = r * 0.07;
-  g.stroke();
-
-  g.beginPath();
-  g.arc(cx, cy, r * 0.96, 0, Math.PI * 2);
-  g.clip();
-
-  // shoulders / jersey
-  g.fillStyle = kit;
-  g.beginPath();
-  g.ellipse(cx, cy + r * 0.95, r * 0.85, r * 0.5, 0, 0, Math.PI * 2);
-  g.fill();
-  // collar
-  g.fillStyle = "rgba(255,255,255,0.22)";
-  g.beginPath();
-  g.ellipse(cx, cy + r * 0.6, r * 0.26, r * 0.13, 0, 0, Math.PI * 2);
-  g.fill();
-
-  // neck + head
-  g.fillStyle = skin;
-  g.fillRect(cx - r * 0.16, cy + r * 0.18, r * 0.32, r * 0.36);
-  g.beginPath();
-  g.ellipse(cx, cy - r * 0.06, r * 0.36, r * 0.44, 0, 0, Math.PI * 2);
-  g.fill();
-
-  // ears
-  g.beginPath();
-  g.ellipse(cx - r * 0.37, cy - r * 0.02, r * 0.07, r * 0.11, 0, 0, Math.PI * 2);
-  g.ellipse(cx + r * 0.37, cy - r * 0.02, r * 0.07, r * 0.11, 0, 0, Math.PI * 2);
-  g.fill();
-
-  // hair
-  g.fillStyle = hair;
-  g.beginPath();
-  g.ellipse(cx, cy - r * 0.32, r * 0.37, r * 0.24, 0, Math.PI, 0);
-  g.fill();
-
-  if (hasBeard) {
-    g.fillStyle = hair;
-    g.beginPath();
-    g.ellipse(cx, cy + r * 0.14, r * 0.3, r * 0.26, 0, 0, Math.PI);
-    g.fill();
-    g.fillStyle = skin;
-    g.beginPath();
-    g.ellipse(cx, cy + r * 0.04, r * 0.16, r * 0.1, 0, 0, Math.PI * 2);
-    g.fill();
-  }
-
-  // eyes + brows
-  g.fillStyle = "#0b1220";
-  g.beginPath();
-  g.ellipse(cx - r * 0.14, cy - r * 0.08, r * 0.045, r * 0.055, 0, 0, Math.PI * 2);
-  g.ellipse(cx + r * 0.14, cy - r * 0.08, r * 0.045, r * 0.055, 0, 0, Math.PI * 2);
-  g.fill();
-  g.strokeStyle = hair;
-  g.lineWidth = r * 0.045;
-  g.beginPath();
-  g.moveTo(cx - r * 0.22, cy - r * 0.18);
-  g.lineTo(cx - r * 0.06, cy - r * 0.21);
-  g.moveTo(cx + r * 0.06, cy - r * 0.21);
-  g.lineTo(cx + r * 0.22, cy - r * 0.18);
-  g.stroke();
-
-  if (capped) {
-    // cap crown + peak, in the kit colour
-    g.fillStyle = kit;
-    g.beginPath();
-    g.ellipse(cx, cy - r * 0.34, r * 0.4, r * 0.28, 0, Math.PI, 0);
-    g.fill();
-    g.fillRect(cx - r * 0.4, cy - r * 0.36, r * 0.8, r * 0.08);
-    g.beginPath();
-    g.ellipse(cx, cy - r * 0.3, r * 0.52, r * 0.1, 0, 0, Math.PI);
-    g.fill();
-  }
-
-  g.restore();
-
-  // role prop, bottom-right of the roundel
-  g.save();
-  g.translate(cx + r * 0.66, cy + r * 0.66);
-  g.rotate(-0.5);
-  if (player.role === "BOWL") {
-    g.fillStyle = "#b91c1c";
-    g.beginPath();
-    g.arc(0, 0, r * 0.16, 0, Math.PI * 2);
-    g.fill();
-    g.strokeStyle = "#fef2f2";
-    g.lineWidth = r * 0.03;
-    g.beginPath();
-    g.arc(0, 0, r * 0.16, -0.9, 0.9);
-    g.stroke();
-  } else {
-    g.fillStyle = "#d6b98c";
-    g.fillRect(-r * 0.07, -r * 0.26, r * 0.14, r * 0.34);
-    g.fillStyle = "#8b5a2b";
-    g.fillRect(-r * 0.035, r * 0.06, r * 0.07, r * 0.2);
-  }
-  g.restore();
-
-  if (player.overseas) {
-    g.fillStyle = "#a5b4fc";
-    g.font = `700 ${Math.round(r * 0.3)}px system-ui, sans-serif`;
-    g.textAlign = "center";
-    g.fillText("✈", cx - r * 0.72, cy - r * 0.6);
-    g.textAlign = "left";
-  }
-}
 
 /** The big screen behind the podium. Drawn with the 2D canvas API and used
  * as a texture — live player details, the standing bid, and the leader, with

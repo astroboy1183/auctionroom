@@ -15,8 +15,8 @@ import { seedRng, shuffle, type Rng } from "../../src/engine/rng";
 import type { AuctionState, Player } from "../../src/engine/types";
 import playersJson from "../../src/data/players.json";
 import {
-  isValidRoomCode, makeRoomCode,
-  type ClientMessage, type Seat, type ServerMessage,
+  isValidRoomCode, makeRoomCode, REACTIONS,
+  type ChatEntry, type ClientMessage, type Seat, type ServerMessage,
 } from "./protocol";
 
 const ALL_PLAYERS = playersJson as Player[];
@@ -42,11 +42,17 @@ interface Persisted {
   hostToken: string | null;
   rng: Rng;
   rtmDeadline: number | null;
+  chat: ChatEntry[];
 }
+
+/** Keep the backlog small: it ships with every join and lives in DO storage. */
+const CHAT_HISTORY = 60;
+const CHAT_MAX_LEN = 240;
 
 interface Attachment {
   token: string;
-  franchiseId: string;
+  franchiseId: string | null; // null = spectator
+  name: string;
 }
 
 export class AuctionRoom extends DurableObject<Env> {
@@ -81,6 +87,7 @@ export class AuctionRoom extends DurableObject<Env> {
       hostToken: null,
       rng: seedRng(seed),
       rtmDeadline: null,
+      chat: [],
     };
   }
 
@@ -121,6 +128,13 @@ export class AuctionRoom extends DurableObject<Env> {
     const att = ws.deserializeAttachment() as Attachment | null;
     if (!att) return this.send(ws, { type: "error", message: "join first" });
 
+    // Chat and reactions are open to spectators too.
+    if (msg.type === "chat") return this.onChat(att, msg.text);
+    if (msg.type === "react") return this.onReact(att, msg.emoji);
+    if (!att.franchiseId) {
+      return this.send(ws, { type: "error", message: "spectators cannot bid" });
+    }
+
     switch (msg.type) {
       case "start":
         if (att.token !== this.state.hostToken) {
@@ -152,25 +166,73 @@ export class AuctionRoom extends DurableObject<Env> {
     }
   }
 
+  private async onChat(att: Attachment, raw: string): Promise<void> {
+    const text = raw.trim().slice(0, CHAT_MAX_LEN);
+    if (!text) return;
+    const entry: ChatEntry = {
+      id: crypto.randomUUID(),
+      franchiseId: att.franchiseId,
+      name: att.name,
+      text,
+      at: Date.now(),
+    };
+    this.state.chat = [...this.state.chat, entry].slice(-CHAT_HISTORY);
+    await this.persist();
+    this.broadcast({ type: "chat", entry });
+  }
+
+  /** Reactions are ephemeral: broadcast, never stored. */
+  private onReact(att: Attachment, emoji: string): void {
+    if (!(REACTIONS as readonly string[]).includes(emoji)) return;
+    this.broadcast({ type: "react", event: { franchiseId: att.franchiseId, emoji, at: Date.now() } });
+  }
+
   private isRtmActor(franchiseId: string, stage: string): boolean {
     const o = this.state.auction.rtmOffer;
     if (!o || o.stage !== stage) return false;
     return stage === "raise" ? o.winningFranchiseId === franchiseId : o.formerFranchiseId === franchiseId;
   }
 
-  private async onJoin(ws: WebSocket, msg: { name: string; token?: string }): Promise<void> {
+  private async onJoin(
+    ws: WebSocket,
+    msg: { name: string; token?: string; spectate?: boolean },
+  ): Promise<void> {
+    const name = msg.name.slice(0, 20) || "Player";
+
+    // Spectators watch without taking a seat — no token, no franchise.
+    if (msg.spectate) {
+      ws.serializeAttachment({ token: "", franchiseId: null, name } satisfies Attachment);
+      this.send(ws, {
+        type: "welcome", token: "", franchiseId: null,
+        roomCode: this.state.code, isHost: false, spectating: true,
+      });
+      this.send(ws, { type: "chat_history", entries: this.state.chat });
+      this.broadcastState();
+      return;
+    }
+
     // Reconnecting with a known token reclaims the same seat.
     let franchiseId = msg.token ? this.state.tokens[msg.token] : undefined;
     let token = msg.token;
 
     if (!franchiseId) {
       const free = this.state.seats.find((s) => !s.isHuman);
-      if (!free) return this.send(ws, { type: "error", message: "room is full" });
+      // A full room still lets you in — as a spectator.
+      if (!free) {
+        ws.serializeAttachment({ token: "", franchiseId: null, name } satisfies Attachment);
+        this.send(ws, {
+          type: "welcome", token: "", franchiseId: null,
+          roomCode: this.state.code, isHost: false, spectating: true,
+        });
+        this.send(ws, { type: "chat_history", entries: this.state.chat });
+        this.broadcastState();
+        return;
+      }
       token = crypto.randomUUID();
       franchiseId = free.franchiseId;
       this.state.tokens[token] = franchiseId;
       free.isHuman = true;
-      free.name = msg.name.slice(0, 20) || "Player";
+      free.name = name;
       this.state.auction = {
         ...this.state.auction,
         franchises: this.state.auction.franchises.map((f) =>
@@ -182,7 +244,7 @@ export class AuctionRoom extends DurableObject<Env> {
 
     const seat = this.state.seats.find((s) => s.franchiseId === franchiseId)!;
     seat.connected = true;
-    ws.serializeAttachment({ token, franchiseId } satisfies Attachment);
+    ws.serializeAttachment({ token: token!, franchiseId, name: seat.name } satisfies Attachment);
     await this.persist();
 
     this.send(ws, {
@@ -191,14 +253,16 @@ export class AuctionRoom extends DurableObject<Env> {
       franchiseId,
       roomCode: this.state.code,
       isHost: token === this.state.hostToken,
+      spectating: false,
     });
+    this.send(ws, { type: "chat_history", entries: this.state.chat });
     this.broadcastState();
   }
 
   async webSocketClose(ws: WebSocket): Promise<void> {
     await this.ready;
     const att = ws.deserializeAttachment() as Attachment | null;
-    if (att) {
+    if (att?.franchiseId) {
       const seat = this.state.seats.find((s) => s.franchiseId === att.franchiseId);
       // The seat is held, not freed: the auction never pauses, but the token
       // lets them reclaim it on reconnect.
@@ -327,13 +391,7 @@ export class AuctionRoom extends DurableObject<Env> {
     }
   }
 
-  private broadcastState(): void {
-    const msg: ServerMessage = {
-      type: "state",
-      auction: this.state.auction,
-      seats: this.state.seats,
-      hostId: this.state.hostToken ? this.state.tokens[this.state.hostToken] ?? null : null,
-    };
+  private broadcast(msg: ServerMessage): void {
     const payload = JSON.stringify(msg);
     for (const ws of this.ctx.getWebSockets()) {
       try {
@@ -342,6 +400,21 @@ export class AuctionRoom extends DurableObject<Env> {
         /* dropped */
       }
     }
+  }
+
+  private broadcastState(): void {
+    let spectators = 0;
+    for (const ws of this.ctx.getWebSockets()) {
+      const att = ws.deserializeAttachment() as Attachment | null;
+      if (att && !att.franchiseId) spectators++;
+    }
+    this.broadcast({
+      type: "state",
+      auction: this.state.auction,
+      seats: this.state.seats,
+      hostId: this.state.hostToken ? this.state.tokens[this.state.hostToken] ?? null : null,
+      spectators,
+    });
   }
 }
 

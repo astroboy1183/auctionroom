@@ -21,9 +21,11 @@ describe("selection", () => {
     expect(xi).toHaveLength(Math.min(XI, A.squad.length));
     expect(xi.some((p) => p.role === "WK")).toBe(true);
     // A 12-man squad only has to carry 3 BOWL + 1 AR, so four is the floor.
+    // A bowler-heavy squad legitimately fields more than five — eleven must
+    // come from somewhere — so this is a floor, not an exact count.
     const squadBowlers = A.squad.filter((p) => p.role === "BOWL" || p.role === "AR").length;
     expect(xi.filter((p) => p.role === "BOWL" || p.role === "AR").length)
-      .toBe(Math.min(5, squadBowlers));
+      .toBeGreaterThanOrEqual(Math.min(5, squadBowlers));
   });
 
   it("always fields five bowlers, dragging in part-timers when short", () => {
