@@ -12,10 +12,9 @@ export const LOT_SECONDS = 10;
 export const ACCEL_SECONDS = 6;
 export const NO_BID_TICKS = 4; // a lot nobody opens on resolves this fast
 /**
- * A bid does NOT restore the full clock. The long window exists to give the
- * room time to *open*; once bidding is flowing the auctioneer moves fast.
- * Measured: full resets made a contested lot average 55s and a whole auction
- * ~89 minutes, against a 15-20 minute target (D-040).
+ * The window a bid restores when NO human can act on this lot — i.e. bots
+ * bidding among themselves. Humans always get the full `LOT_SECONDS` to think
+ * (D-041); nobody needs deliberation time for a war they're not in.
  */
 export const REBID_SECONDS = 4;
 
@@ -23,9 +22,20 @@ function lotSeconds(accelerated: boolean): number {
   return accelerated ? ACCEL_SECONDS : LOT_SECONDS;
 }
 
-/** The clock a bid restores: short, and never longer than the lot's own. */
-function rebidSeconds(accelerated: boolean): number {
-  return Math.min(REBID_SECONDS, lotSeconds(accelerated));
+/**
+ * The clock a bid restores.
+ *
+ * A human who could still bid gets the FULL lot window every single time —
+ * reading a new price, weighing it against your purse and your plan, and
+ * clicking takes real seconds, and rushing that is what makes an auction feel
+ * cheap. Only when no human can legally act (everyone passed, or can't
+ * afford it, or it's a bots-only seat) does the clock shorten, because a
+ * bot-versus-bot war needs no deliberation time.
+ */
+function rebidSeconds(state: AuctionState): number {
+  const full = lotSeconds(state.accelerated);
+  const humanInPlay = state.franchises.some((f) => f.isHuman && canBid(state, f.id).ok);
+  return humanInPlay ? full : Math.min(REBID_SECONDS, full);
 }
 
 /** Set-ordered pool with a seeded shuffle inside each set — CLAUDE.md §7. */
@@ -143,8 +153,12 @@ export function applyEvent(state: AuctionState, event: AuctionEvent): AuctionSta
           ...state.bidHistory,
           { franchiseId: event.franchiseId, amount, playerId: state.currentPlayer!.id },
         ],
-        // A bid buys a short reaction window, not a whole fresh lot.
-        timer: rebidSeconds(state.accelerated),
+        // Full window while a human can still act; short for bot-only wars.
+        timer: rebidSeconds({
+          ...state,
+          currentBid: amount,
+          currentBidderId: event.franchiseId,
+        }),
         // `passed` is NOT cleared: passing is a commitment to sit this lot
         // out, not a per-price opinion. It clears on NEXT_PLAYER.
       };

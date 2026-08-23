@@ -20,16 +20,32 @@ describe("lot lifecycle", () => {
     expect(s.unsold).toHaveLength(1);
   });
 
-  it("a bid buys a short reaction window, not a full fresh lot", () => {
+  it("a human who can still bid always gets the full clock back", () => {
     let s = biddingState();
     s = applyEvent(s, { type: "TICK" });
     s = applyEvent(s, { type: "BID", franchiseId: "mum" });
-    // Restoring the whole 10s on every bid let contested lots run ~55s and
-    // pushed a full auction to ~89 minutes (D-040).
-    expect(s.timer).toBe(REBID_SECONDS);
-    expect(s.timer).toBeLessThan(LOT_SECONDS);
+    // "hyd" is the human seat and can still act, so the window is full.
+    expect(s.timer).toBe(LOT_SECONDS);
     expect(s.currentBid).toBe(s.currentPlayer!.basePrice);
     expect(s.currentBidderId).toBe("mum");
+  });
+
+  it("the human keeps the full clock however long the war runs", () => {
+    let s = biddingState();
+    for (const id of ["mum", "del", "che", "ben", "kol"]) {
+      s = applyEvent(s, { type: "TICK" });
+      s = applyEvent(s, { type: "BID", franchiseId: id });
+      expect(s.timer).toBe(LOT_SECONDS);
+    }
+  });
+
+  it("a bots-only war runs on the short window", () => {
+    // No human able to act: the human seat has passed out of this lot.
+    let s = biddingState();
+    s = applyEvent(s, { type: "PASS", franchiseId: "hyd" });
+    s = applyEvent(s, { type: "BID", franchiseId: "mum" });
+    expect(s.timer).toBe(REBID_SECONDS);
+    expect(s.timer).toBeLessThan(LOT_SECONDS);
   });
 
   it("the opening window is still the full lot length", () => {

@@ -36,6 +36,30 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-041 — The human always gets the full clock; only bot wars run short
+**User correction, 2026-08-21.** D-040 cut the rebid window to 4s for
+everyone, which optimised total duration at the cost of the thing that
+actually matters: a human needs to read a new price, weigh it against their
+purse and their plan, and click. Four seconds is not enough, and rushing that
+makes an auction feel cheap.
+
+**Rule now:** a bid restores the **full** `LOT_SECONDS` whenever any human
+seat could still legally bid on that lot. The short `REBID_SECONDS` window
+applies only when no human can act — everyone has passed, can't afford it, or
+it's a bots-only seat. Nobody needs deliberation time for a war they are not
+in.
+
+**Measured with a human in play:** ~32–35 minutes for a full auction, median
+lot 11–17s, longest 45–59s. Longer than the 24 minutes of pure-bot pacing, and
+that is the correct trade — the extra time is spent exclusively on lots the
+player is actually contesting. Lots they ignore still fly past on the short
+window.
+
+Multiplayer rooms can raise this further: the host's clock setting (6–30s)
+already overrides the default for a slower, more deliberate game.
+
+Balance unchanged: 96/96 minimums met, avg ₹9.2 Cr.
+
 ## D-040 — Auction pacing: the game took 89 minutes and nobody had measured it
 **2026-08-21.** Running a real production room end-to-end for the first time
 (to see live commentary) exposed that a single marquee lot ate 100 seconds.
