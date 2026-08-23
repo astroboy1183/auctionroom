@@ -167,6 +167,18 @@ export interface BowlingCard {
   wickets: number;
 }
 
+/** One delivery, kept so a match can be watched back rather than only read. */
+export interface BallEvent {
+  over: number;      // 0-indexed
+  ball: number;      // 1-6 within the over
+  strikerId: string;
+  strikerName: string;
+  bowlerName: string;
+  outcome: Outcome;
+  runsAfter: number;
+  wicketsAfter: number;
+}
+
 export interface Innings {
   franchiseId: string;
   runs: number;
@@ -174,6 +186,8 @@ export interface Innings {
   balls: number;
   batting: BattingCard[];
   bowling: BowlingCard[];
+  /** Every delivery in order — the source for match playback. */
+  timeline: BallEvent[];
   /** Set when a chase succeeds. */
   chasedDown: boolean;
 }
@@ -236,6 +250,7 @@ export function playInnings(
   let nonStrikerIdx = 1;
   let nextBatter = 2;
   let chasedDown = false;
+  const timeline: BallEvent[] = [];
 
   for (let over = 0; over < OVERS && wickets < ALL_OUT; over++) {
     const bowler = plan[over];
@@ -282,6 +297,17 @@ export function playInnings(
         if (outcome === 6) bc.sixes++;
         if (outcome % 2 === 1) [strikerIdx, nonStrikerIdx] = [nonStrikerIdx, strikerIdx];
       }
+
+      timeline.push({
+        over,
+        ball: b + 1,
+        strikerId: striker.id,
+        strikerName: striker.name,
+        bowlerName: bowler.name,
+        outcome,
+        runsAfter: runs,
+        wicketsAfter: Math.min(wickets, ALL_OUT),
+      });
     }
     if (target !== undefined && runs >= target) { chasedDown = true; break; }
     [strikerIdx, nonStrikerIdx] = [nonStrikerIdx, strikerIdx]; // ends change
@@ -295,6 +321,7 @@ export function playInnings(
       balls,
       batting: [...bat.values()].filter((c) => c.balls > 0),
       bowling: [...bowl.values()].filter((c) => c.balls > 0),
+      timeline,
       chasedDown,
     },
     r,
@@ -343,6 +370,26 @@ export function playMatch(home: Franchise, away: Franchise, rng: Rng): [Match, R
 export function scoreline(i: Innings): string {
   const overs = `${Math.floor(i.balls / 6)}.${i.balls % 6}`;
   return `${i.runs}/${i.wickets} (${overs})`;
+}
+
+/** Strike rate and economy, formatted for a scorecard. */
+export function strikeRate(c: BattingCard): string {
+  return c.balls === 0 ? "—" : ((c.runs / c.balls) * 100).toFixed(1);
+}
+
+export function economy(c: BowlingCard): string {
+  return c.balls === 0 ? "—" : ((c.runs / c.balls) * 6).toFixed(2);
+}
+
+export function oversOf(balls: number): string {
+  return `${Math.floor(balls / 6)}.${balls % 6}`;
+}
+
+/** The closing overs, where chases are won and lost. */
+export function finalOvers(inn: Innings, count = 2): BallEvent[] {
+  if (inn.timeline.length === 0) return [];
+  const lastOver = inn.timeline[inn.timeline.length - 1].over;
+  return inn.timeline.filter((b) => b.over > lastOver - count);
 }
 
 /** Best individual performance in a match, for a "player of the match" line. */

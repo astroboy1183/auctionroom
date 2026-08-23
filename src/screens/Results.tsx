@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { fanfare } from "../lib/audio";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { finalScores } from "../engine/scoring";
 import { playTournament, matchesFor } from "../engine/tournament";
 import { analyse } from "../engine/analytics";
 import { playerOfTheMatch } from "../engine/match";
+import Scorecard from "../components/Scorecard";
+import type { MatchResult } from "../engine/tournament";
 import { START_BUDGET } from "../engine/franchises";
 import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../engine/rules";
 import { money } from "../components/format";
@@ -32,12 +34,15 @@ export default function Results() {
   const stats = useMemo(() => analyse(auction, START_BUDGET), [auction]);
   const startGame = useGameStore((s) => s.startGame);
   const [seedCopied, setSeedCopied] = useState(false);
+  const [openMatch, setOpenMatch] = useState<MatchResult | null>(null);
   const soundOn = useGameStore((s) => s.soundOn);
   useEffect(() => {
     if (soundOn) fanfare();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const winner = auction.franchises.find((f) => f.id === tournament.championId)!;
+  const leader = auction.franchises.find((f) => f.id === tournament.leagueLeaderId)!;
+  const po = tournament.playoffs;
   const humanRank = tournament.table.findIndex((r) => r.franchiseId === humanId) + 1;
   const humanRow = tournament.table.find((r) => r.franchiseId === humanId);
   const byId = (id: string) => auction.franchises.find((f) => f.id === id)!;
@@ -76,7 +81,10 @@ export default function Results() {
               : `You finished #${humanRank} of ${tournament.table.length}${humanRow ? ` — ${humanRow.won} wins, ${humanRow.lost} losses` : ""}.`}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Every squad played each other once · {tournament.matches.length} matches
+            {tournament.matches.length} league matches, then the playoffs
+            {leader.id !== winner.id && (
+              <> · <span style={{ color: leader.color }}>{leader.name}</span> topped the table</>
+            )}
           </p>
           <div className="mt-4 flex justify-center gap-3">
             <button onClick={share}
@@ -152,9 +160,51 @@ export default function Results() {
               </tbody>
             </table>
 
+            {po && (
+              <div className="mt-5 border-t border-slate-800 pt-4">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Playoffs — click any match for the full scorecard
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {([
+                    ["Qualifier 1", po.qualifier1, "winner to the final"],
+                    ["Eliminator", po.eliminator, "loser goes home"],
+                    ["Qualifier 2", po.qualifier2, "last route in"],
+                    ["Final", po.final, "for the title"],
+                  ] as const).map(([label, m, note]) => {
+                    const w = byId(m.winnerId);
+                    const isFinal = label === "Final";
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => setOpenMatch(m)}
+                        className={`rounded-lg p-2.5 text-left transition hover:brightness-125 ${isFinal ? "bg-amber-500/10 ring-1 ring-amber-500/40" : "bg-slate-900/70"}`}
+                      >
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                          {label} · {note}
+                        </p>
+                        <p className="mt-0.5 text-sm">
+                          <span className="text-slate-400">{byId(m.homeId).name.split(" ")[1]}</span>
+                          <span className="mx-1 font-mono text-slate-500">{m.homeLine}</span>
+                          <span className="text-slate-600">v</span>
+                          <span className="mx-1 font-mono text-slate-500">{m.awayLine}</span>
+                          <span className="text-slate-400">{byId(m.awayId).name.split(" ")[1]}</span>
+                        </p>
+                        <p className="mt-0.5 text-xs font-bold" style={{ color: w.color }}>
+                          {isFinal && "🏆 "}{w.name} won by {m.margin}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {humanRow && (
               <div className="mt-5">
-                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Your matches</p>
+                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Your league matches — click for the scorecard
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {matchesFor(tournament, humanId).map((m, i) => {
                     const oppId = m.homeId === humanId ? m.awayId : m.homeId;
@@ -162,15 +212,16 @@ export default function Results() {
                     const theirs = m.homeId === humanId ? m.awayScore : m.homeScore;
                     const won = m.winnerId === humanId;
                     return (
-                      <span
+                      <button
                         key={i}
-                        className={`rounded px-2 py-1 text-[11px] font-semibold ${won ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}
+                        onClick={() => setOpenMatch(m)}
+                        className={`rounded px-2 py-1 text-[11px] font-semibold transition hover:brightness-125 ${won ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}
                         title={`${m.homeLine} v ${m.awayLine} — won by ${m.margin}${
                           playerOfTheMatch(m.detail) ? ` · ${playerOfTheMatch(m.detail)!.name} ${playerOfTheMatch(m.detail)!.line}` : ""
                         }`}
                       >
                         {won ? "W" : "L"} {mine}–{theirs} v {byId(oppId).name.split(" ")[1]}
-                      </span>
+                      </button>
                     );
                   })}
                 </div>
@@ -306,6 +357,16 @@ export default function Results() {
           })}
         </div>
       </div>
+
+      <AnimatePresence>
+        {openMatch && (
+          <Scorecard
+            match={openMatch}
+            franchises={auction.franchises}
+            onClose={() => setOpenMatch(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

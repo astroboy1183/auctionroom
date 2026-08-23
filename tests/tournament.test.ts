@@ -61,12 +61,53 @@ describe("tournament", () => {
     expect(totalWins).toBe(t.matches.length);
   });
 
-  it("the table is sorted and crowns the top row", () => {
+  it("the table is sorted and names a league leader", () => {
     const t = playTournament(state.franchises, 3);
     for (let i = 1; i < t.table.length; i++) {
       expect(t.table[i - 1].points).toBeGreaterThanOrEqual(t.table[i].points);
     }
-    expect(t.championId).toBe(t.table[0].franchiseId);
+    expect(t.leagueLeaderId).toBe(t.table[0].franchiseId);
+  });
+
+  it("runs a four-team knockout and crowns the winner of the final", () => {
+    const t = playTournament(state.franchises, 3);
+    const p = t.playoffs!;
+    expect(p).not.toBeNull();
+    const top4 = t.table.slice(0, 4).map((r) => r.franchiseId);
+
+    // Q1 is 1v2, Eliminator is 3v4.
+    expect([p.qualifier1.homeId, p.qualifier1.awayId].sort()).toEqual([top4[0], top4[1]].sort());
+    expect([p.eliminator.homeId, p.eliminator.awayId].sort()).toEqual([top4[2], top4[3]].sort());
+
+    // Q2 is the Q1 loser against the Eliminator winner.
+    const q1Loser = p.qualifier1.winnerId === top4[0] ? top4[1] : top4[0];
+    expect([p.qualifier2.homeId, p.qualifier2.awayId].sort())
+      .toEqual([q1Loser, p.eliminator.winnerId].sort());
+
+    // The final is Q1 winner v Q2 winner, and its winner is champion.
+    expect(p.finalistIds.sort()).toEqual([p.qualifier1.winnerId, p.qualifier2.winnerId].sort());
+    expect(t.championId).toBe(p.final.winnerId);
+    expect(top4).toContain(t.championId);
+  });
+
+  it("losing the eliminator ends your season", () => {
+    const t = playTournament(state.franchises, 12);
+    const p = t.playoffs!;
+    const elimLoser = p.eliminator.winnerId === p.eliminator.homeId ? p.eliminator.awayId : p.eliminator.homeId;
+    expect(p.finalistIds).not.toContain(elimLoser);
+    expect(t.championId).not.toBe(elimLoser);
+  });
+
+  it("the table-topper does not automatically win the title", () => {
+    // Over many seasons, finishing first must sometimes still lose the final —
+    // otherwise the knockout is decoration.
+    let leaderWonTitle = 0;
+    for (let s = 0; s < 60; s++) {
+      const t = playTournament(state.franchises, s * 3);
+      if (t.championId === t.leagueLeaderId) leaderWonTitle++;
+    }
+    expect(leaderWonTitle).toBeGreaterThan(0);
+    expect(leaderWonTitle).toBeLessThan(60);
   });
 
   it("is deterministic per seed", () => {

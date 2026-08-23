@@ -105,10 +105,23 @@ function playMatch(a: Franchise, b: Franchise, rng: Rng): [MatchResult, Rng] {
   ];
 }
 
+/** The knockout stage, IPL-style: the top two get a second chance. */
+export interface Playoffs {
+  qualifier1: MatchResult;  // 1st v 2nd — winner goes straight to the final
+  eliminator: MatchResult;  // 3rd v 4th — loser is out
+  qualifier2: MatchResult;  // loser of Q1 v winner of Eliminator
+  final: MatchResult;
+  finalistIds: [string, string];
+}
+
 export interface Tournament {
   matches: MatchResult[];
   table: TableRow[];
+  playoffs: Playoffs | null;
+  /** Winner of the final — or the table-topper if there aren't four teams. */
   championId: string;
+  /** Table-topper, which is no longer necessarily the champion. */
+  leagueLeaderId: string;
 }
 
 /**
@@ -151,7 +164,35 @@ export function playTournament(franchises: Franchise[], seed: number): Tournamen
   const table = [...rows.values()].sort(
     (x, y) => y.points - x.points || y.runRate - x.runRate || y.strength.overall - x.strength.overall,
   );
-  return { matches, table, championId: table[0].franchiseId };
+
+  // Knockouts. Finishing top two is worth something concrete: lose Q1 and you
+  // still get a second route into the final.
+  const byId = (id: string) => franchises.find((f) => f.id === id)!;
+  let playoffs: Playoffs | null = null;
+  let championId = table[0].franchiseId;
+
+  if (table.length >= 4) {
+    const [first, second, third, fourth] = table.map((r) => byId(r.franchiseId));
+
+    let qualifier1: MatchResult;
+    [qualifier1, rng] = playMatch(first, second, rng);
+    let eliminator: MatchResult;
+    [eliminator, rng] = playMatch(third, fourth, rng);
+
+    const q1Loser = byId(qualifier1.winnerId === first.id ? second.id : first.id);
+    const elimWinner = byId(eliminator.winnerId);
+    let qualifier2: MatchResult;
+    [qualifier2, rng] = playMatch(q1Loser, elimWinner, rng);
+
+    const finalists: [string, string] = [qualifier1.winnerId, qualifier2.winnerId];
+    let final: MatchResult;
+    [final, rng] = playMatch(byId(finalists[0]), byId(finalists[1]), rng);
+
+    playoffs = { qualifier1, eliminator, qualifier2, final, finalistIds: finalists };
+    championId = final.winnerId;
+  }
+
+  return { matches, table, playoffs, championId, leagueLeaderId: table[0].franchiseId };
 }
 
 /** Every match a given franchise played, in order. */
