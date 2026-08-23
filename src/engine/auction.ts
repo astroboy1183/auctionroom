@@ -11,9 +11,21 @@ import { seedRng, shuffle, type Rng } from "./rng";
 export const LOT_SECONDS = 10;
 export const ACCEL_SECONDS = 6;
 export const NO_BID_TICKS = 4; // a lot nobody opens on resolves this fast
+/**
+ * A bid does NOT restore the full clock. The long window exists to give the
+ * room time to *open*; once bidding is flowing the auctioneer moves fast.
+ * Measured: full resets made a contested lot average 55s and a whole auction
+ * ~89 minutes, against a 15-20 minute target (D-040).
+ */
+export const REBID_SECONDS = 4;
 
 function lotSeconds(accelerated: boolean): number {
   return accelerated ? ACCEL_SECONDS : LOT_SECONDS;
+}
+
+/** The clock a bid restores: short, and never longer than the lot's own. */
+function rebidSeconds(accelerated: boolean): number {
+  return Math.min(REBID_SECONDS, lotSeconds(accelerated));
 }
 
 /** Set-ordered pool with a seeded shuffle inside each set — CLAUDE.md §7. */
@@ -131,7 +143,8 @@ export function applyEvent(state: AuctionState, event: AuctionEvent): AuctionSta
           ...state.bidHistory,
           { franchiseId: event.franchiseId, amount, playerId: state.currentPlayer!.id },
         ],
-        timer: lotSeconds(state.accelerated), // every bid resets the clock
+        // A bid buys a short reaction window, not a whole fresh lot.
+        timer: rebidSeconds(state.accelerated),
         // `passed` is NOT cleared: passing is a commitment to sit this lot
         // out, not a per-price opinion. It clears on NEXT_PLAYER.
       };

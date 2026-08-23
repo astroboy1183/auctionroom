@@ -11,6 +11,9 @@ const TICK_MS = 1000;
 const SKIP_TICK_MS = 130; // fast-forward when the human skips a lot
 const BOT_CYCLE_MS = 420;
 const SKIP_BOT_CYCLE_MS = 70;
+/** Bids allowed per bot cycle. One per second made a full auction ~40 min;
+ *  a burst matches how a real room actually sounds (D-040). */
+const MAX_BIDS_PER_CYCLE = 3;
 const RTM_SUSPENSE_MS = 1100;
 const SOLD_BANNER_MS = 1900;
 const UNSOLD_BANNER_MS = 1100;
@@ -33,13 +36,17 @@ export function useAuctionDriver() {
       if (auction.phase !== "bidding") return;
       let order;
       [order, rngRef.current] = shuffle(auction.franchises, rngRef.current);
+      let placed = 0;
       for (const f of order) {
-        if (f.isHuman) continue;
+        if (f.isHuman || placed >= MAX_BIDS_PER_CYCLE) continue;
+        // Re-read: each dispatch changes the price the next bot is judging.
+        const current = useGameStore.getState().auction;
+        if (current.phase !== "bidding") break;
         let move;
-        [move, rngRef.current] = botAction(auction, f.id, rngRef.current);
+        [move, rngRef.current] = botAction(current, f.id, rngRef.current);
         if (move === "bid") {
           dispatch({ type: "BID", franchiseId: f.id });
-          break; // one bid per cycle keeps the war readable
+          placed++;
         }
       }
     }, skipping ? SKIP_BOT_CYCLE_MS : BOT_CYCLE_MS);

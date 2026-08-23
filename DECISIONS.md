@@ -36,6 +36,38 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-040 — Auction pacing: the game took 89 minutes and nobody had measured it
+**2026-08-21.** Running a real production room end-to-end for the first time
+(to see live commentary) exposed that a single marquee lot ate 100 seconds.
+Measuring properly — one TICK is one real second in both the browser driver
+and the DO alarm — gave the true figure: **~89 minutes for a full auction**,
+median lot 55s, against the spec's 15–20 minute target.
+
+**Why it was never caught:** every test to date used either headless instant
+ticks (balance sims, the 1000-auction sweep) or `__ff()` fast-forward. Both
+measure correctness, neither measures *duration*. Wall-clock was an untested
+dimension of a real-time game.
+
+**Two causes, two fixes:**
+1. **Every bid restored the full 10-second clock**, so a contested lot
+   ratcheted indefinitely — bid, reset, bid, reset. A bid now buys a
+   `REBID_SECONDS` (4s) reaction window; the long window exists to let the room
+   *open*, and a real auctioneer moves fast once bids are flowing.
+   → 89 min to 40 min.
+2. **One bid per second** meant the price climbed one increment per tick, so
+   reaching ₹18 Cr from a ₹2 Cr base took 20+ seconds of pure arithmetic. The
+   driver and the DO now allow a burst of up to 3 bids per tick, re-reading
+   state between each so every bot judges the current price. Several paddles
+   going up between calls is also how a real room actually sounds.
+   → 40 min to **24 min**, median lot 13s, longest 26s.
+
+**Balance verified unchanged after both:** 96/96 mandatory minimums met, avg
+₹9.2 Cr, ~16 unsold. Shorter windows changed the tempo, not the outcomes.
+
+**Lesson worth keeping:** simulation speed and play speed are different
+properties. A headless sweep that passes 1000 times says nothing about whether
+anyone can sit through one.
+
 ## D-039 — Trading, formats and mystery lots
 **2026-08-21.** A between-seasons transfer window generates offers using the
 *same* valuation the bots bid with, so it reads as negotiating with the

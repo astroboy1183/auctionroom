@@ -32,6 +32,8 @@ const UNSOLD_BANNER_MS = 1400;
 /** A human sitting on an RTM decision cannot stall the room forever. */
 const RTM_HUMAN_TIMEOUT_MS = 15_000;
 const RTM_BOT_THINK_MS = 1200;
+/** Bids allowed per one-second tick — see D-040. */
+const MAX_BIDS_PER_TICK = 3;
 
 export interface Env {
   ROOMS: DurableObjectNamespace<AuctionRoom>;
@@ -436,17 +438,21 @@ export class AuctionRoom extends DurableObject<Env> {
 
     switch (a.phase) {
       case "bidding": {
-        // One bot may act per tick — enough to feel like a room reacting,
-        // few enough that a war stays readable.
+        // A burst of bids per tick, not one: at one-per-second a full auction
+        // ran ~40 minutes against a 15-20 minute target (D-040). Several
+        // paddles going up between calls is also how a real room sounds.
         let order;
         [order, this.state.rng] = shuffle(a.franchises, this.state.rng);
+        let placed = 0;
         for (const f of order) {
-          if (f.isHuman || !canBid(this.state.auction, f.id).ok) continue;
+          if (f.isHuman || placed >= MAX_BIDS_PER_TICK) continue;
+          if (this.state.auction.phase !== "bidding") break;
+          if (!canBid(this.state.auction, f.id).ok) continue;
           let move;
           [move, this.state.rng] = botAction(this.state.auction, f.id, this.state.rng);
           if (move === "bid") {
             this.state.auction = applyEvent(this.state.auction, { type: "BID", franchiseId: f.id });
-            break;
+            placed++;
           }
         }
         if (this.state.auction.phase === "bidding") {

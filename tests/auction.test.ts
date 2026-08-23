@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyEvent, LOT_SECONDS, NO_BID_TICKS } from "../src/engine/auction";
+import { applyEvent, LOT_SECONDS, NO_BID_TICKS, REBID_SECONDS } from "../src/engine/auction";
 import { simulateRandomAuction } from "../src/engine/simulate";
 import { SQUAD_MAX, OVERSEAS_MAX, overseasCount, canBid } from "../src/engine/rules";
 import { biddingState, player } from "./helpers";
@@ -20,13 +20,21 @@ describe("lot lifecycle", () => {
     expect(s.unsold).toHaveLength(1);
   });
 
-  it("a bid resets the clock to the full lot length", () => {
+  it("a bid buys a short reaction window, not a full fresh lot", () => {
     let s = biddingState();
     s = applyEvent(s, { type: "TICK" });
     s = applyEvent(s, { type: "BID", franchiseId: "mum" });
-    expect(s.timer).toBe(LOT_SECONDS);
+    // Restoring the whole 10s on every bid let contested lots run ~55s and
+    // pushed a full auction to ~89 minutes (D-040).
+    expect(s.timer).toBe(REBID_SECONDS);
+    expect(s.timer).toBeLessThan(LOT_SECONDS);
     expect(s.currentBid).toBe(s.currentPlayer!.basePrice);
     expect(s.currentBidderId).toBe("mum");
+  });
+
+  it("the opening window is still the full lot length", () => {
+    const s = biddingState();
+    expect(s.timer).toBe(LOT_SECONDS);
   });
 
   it("when every rival passes, the lot closes immediately", () => {
