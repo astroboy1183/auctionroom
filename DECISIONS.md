@@ -36,6 +36,22 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-042 — Pacing reverted: every bid restores the full clock
+**Owner's decision, 2026-08-21.** Both D-040 pacing changes are reverted. Every
+bid restores the full `LOT_SECONDS` for every bidder, and the driver and DO
+place one bid per tick again. A full auction runs ~90 minutes.
+
+The owner saw the measured numbers (89 min → 24 min → 32 min) and chose the
+original. The reasoning is sound and I was solving the wrong problem: a lot
+that only closes when the *entire room* has run out of appetite is what a real
+bidding war feels like, and compressing it made the auction quicker and
+cheaper-feeling. Length is not the same as tedium.
+
+`REBID_SECONDS` is left in the file, unused, for anyone who wants to re-tune.
+Players who want a shorter session already have better tools: **Skip** (⏭) for
+one lot, **Skip pool** to hand the rest to their assistant, and **Simulate the
+whole auction** from the lobby.
+
 ## D-041 — The human always gets the full clock; only bot wars run short
 **User correction, 2026-08-21.** D-040 cut the rebid window to 4s for
 everyone, which optimised total duration at the cost of the thing that

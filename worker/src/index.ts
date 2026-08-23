@@ -32,8 +32,8 @@ const UNSOLD_BANNER_MS = 1400;
 /** A human sitting on an RTM decision cannot stall the room forever. */
 const RTM_HUMAN_TIMEOUT_MS = 15_000;
 const RTM_BOT_THINK_MS = 1200;
-/** Bids allowed per one-second tick — see D-040. */
-const MAX_BIDS_PER_TICK = 3;
+/** One bid per tick — the original, deliberately restored (D-042). */
+const MAX_BIDS_PER_TICK = 1;
 
 export interface Env {
   ROOMS: DurableObjectNamespace<AuctionRoom>;

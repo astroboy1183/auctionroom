@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyEvent, LOT_SECONDS, NO_BID_TICKS, REBID_SECONDS } from "../src/engine/auction";
+import { applyEvent, LOT_SECONDS, NO_BID_TICKS } from "../src/engine/auction";
 import { simulateRandomAuction } from "../src/engine/simulate";
 import { SQUAD_MAX, OVERSEAS_MAX, overseasCount, canBid } from "../src/engine/rules";
 import { biddingState, player } from "./helpers";
@@ -20,7 +20,7 @@ describe("lot lifecycle", () => {
     expect(s.unsold).toHaveLength(1);
   });
 
-  it("a human who can still bid always gets the full clock back", () => {
+  it("every bid restores the full clock, for everyone (D-042)", () => {
     let s = biddingState();
     s = applyEvent(s, { type: "TICK" });
     s = applyEvent(s, { type: "BID", franchiseId: "mum" });
@@ -39,13 +39,12 @@ describe("lot lifecycle", () => {
     }
   });
 
-  it("a bots-only war runs on the short window", () => {
-    // No human able to act: the human seat has passed out of this lot.
+  it("a bots-only war also gets the full clock", () => {
+    // Deliberate: no special-casing by who is bidding (D-042).
     let s = biddingState();
     s = applyEvent(s, { type: "PASS", franchiseId: "hyd" });
     s = applyEvent(s, { type: "BID", franchiseId: "mum" });
-    expect(s.timer).toBe(REBID_SECONDS);
-    expect(s.timer).toBeLessThan(LOT_SECONDS);
+    expect(s.timer).toBe(LOT_SECONDS);
   });
 
   it("the opening window is still the full lot length", () => {

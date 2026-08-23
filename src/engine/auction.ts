@@ -12,9 +12,9 @@ export const LOT_SECONDS = 10;
 export const ACCEL_SECONDS = 6;
 export const NO_BID_TICKS = 4; // a lot nobody opens on resolves this fast
 /**
- * The window a bid restores when NO human can act on this lot — i.e. bots
- * bidding among themselves. Humans always get the full `LOT_SECONDS` to think
- * (D-041); nobody needs deliberation time for a war they're not in.
+ * Kept for the tests and for anyone who wants to re-tune pacing. NOT used:
+ * by owner's decision every bid restores the full `LOT_SECONDS`, for everyone
+ * (D-042). Shortening it made the auction quicker and worse.
  */
 export const REBID_SECONDS = 4;
 
@@ -23,19 +23,13 @@ function lotSeconds(accelerated: boolean): number {
 }
 
 /**
- * The clock a bid restores.
- *
- * A human who could still bid gets the FULL lot window every single time —
- * reading a new price, weighing it against your purse and your plan, and
- * clicking takes real seconds, and rushing that is what makes an auction feel
- * cheap. Only when no human can legally act (everyone passed, or can't
- * afford it, or it's a bots-only seat) does the clock shorten, because a
- * bot-versus-bot war needs no deliberation time.
+ * Every bid restores the full clock, for everyone — the original behaviour,
+ * restored deliberately (D-042). It makes for a long auction (~90 min) and a
+ * genuinely tense one: a lot only closes when the whole room has run out of
+ * appetite, which is exactly what a real bidding war feels like.
  */
 function rebidSeconds(state: AuctionState): number {
-  const full = lotSeconds(state.accelerated);
-  const humanInPlay = state.franchises.some((f) => f.isHuman && canBid(state, f.id).ok);
-  return humanInPlay ? full : Math.min(REBID_SECONDS, full);
+  return lotSeconds(state.accelerated);
 }
 
 /** Set-ordered pool with a seeded shuffle inside each set — CLAUDE.md §7. */

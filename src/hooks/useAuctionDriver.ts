@@ -11,9 +11,9 @@ const TICK_MS = 1000;
 const SKIP_TICK_MS = 130; // fast-forward when the human skips a lot
 const BOT_CYCLE_MS = 420;
 const SKIP_BOT_CYCLE_MS = 70;
-/** Bids allowed per bot cycle. One per second made a full auction ~40 min;
- *  a burst matches how a real room actually sounds (D-040). */
-const MAX_BIDS_PER_CYCLE = 3;
+/** One bid per cycle — the original, deliberately restored (D-042). Bursts
+ *  were quicker but flattened the back-and-forth of a war. */
+const MAX_BIDS_PER_CYCLE = 1;
 const RTM_SUSPENSE_MS = 1100;
 const SOLD_BANNER_MS = 1900;
 const UNSOLD_BANNER_MS = 1100;
