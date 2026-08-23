@@ -3,7 +3,7 @@
 // still run a full eight-franchise auction.
 
 import { motion } from "motion/react";
-import type { Seat } from "../../worker/src/protocol";
+import type { RoomSettings, Seat } from "../../worker/src/protocol";
 import type { AuctionState } from "../engine/types";
 import { money } from "../components/format";
 
@@ -13,12 +13,14 @@ interface Props {
   auction: AuctionState | null;
   franchiseId: string | null;
   isHost: boolean;
+  settings: RoomSettings;
+  onSettings: (s: Partial<RoomSettings>) => void;
   onStart: () => void;
   onLeave: () => void;
 }
 
 export default function RoomLobby({
-  roomCode, seats, auction, franchiseId, isHost, onStart, onLeave,
+  roomCode, seats, auction, franchiseId, isHost, settings, onSettings, onStart, onLeave,
 }: Props) {
   const humans = seats.filter((s) => s.isHuman).length;
   const shareUrl = `${location.origin}/?room=${roomCode}`;
@@ -85,6 +87,38 @@ export default function RoomLobby({
             );
           })}
         </ul>
+
+        <div className="mt-5 rounded-xl border border-slate-800 p-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+            Room settings {!isHost && <span className="text-slate-600">· host only</span>}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            {(["easy", "normal", "hard"] as const).map((d) => (
+              <button
+                key={d}
+                disabled={!isHost}
+                onClick={() => onSettings({ difficulty: d })}
+                className={`rounded px-2.5 py-1 font-bold capitalize ${
+                  settings.difficulty === d ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-400"
+                } ${isHost ? "hover:brightness-110" : "opacity-60"}`}
+              >
+                {d}
+              </button>
+            ))}
+            <label className="ml-auto flex items-center gap-2 text-slate-400">
+              Clock
+              <input
+                type="range" min={6} max={30} step={1}
+                disabled={!isHost}
+                value={settings.lotSeconds}
+                onChange={(e) => onSettings({ lotSeconds: Number(e.target.value) })}
+                className="w-24 accent-amber-500 disabled:opacity-50"
+                aria-label="Seconds per lot"
+              />
+              <span className="w-8 font-mono font-bold text-slate-200">{settings.lotSeconds}s</span>
+            </label>
+          </div>
+        </div>
 
         {isHost ? (
           <motion.button

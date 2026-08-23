@@ -9,6 +9,7 @@ import { playTournament, matchesFor } from "../engine/tournament";
 import { analyse } from "../engine/analytics";
 import { playerOfTheMatch } from "../engine/match";
 import Scorecard from "../components/Scorecard";
+import SeasonEnd from "./SeasonEnd";
 import type { MatchResult } from "../engine/tournament";
 import { START_BUDGET } from "../engine/franchises";
 import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../engine/rules";
@@ -35,6 +36,8 @@ export default function Results() {
   const startGame = useGameStore((s) => s.startGame);
   const [seedCopied, setSeedCopied] = useState(false);
   const [openMatch, setOpenMatch] = useState<MatchResult | null>(null);
+  const career = useGameStore((s) => s.career);
+  const [seasonEnd, setSeasonEnd] = useState(false);
   const soundOn = useGameStore((s) => s.soundOn);
   useEffect(() => {
     if (soundOn) fanfare();
@@ -86,7 +89,21 @@ export default function Results() {
               <> · <span style={{ color: leader.color }}>{leader.name}</span> topped the table</>
             )}
           </p>
+          {career && (
+            <p className="mt-2 text-xs font-black uppercase tracking-widest text-amber-400">
+              Season {career.season}
+              {career.titles[humanId] ? ` · ${career.titles[humanId]} title${career.titles[humanId] > 1 ? "s" : ""}` : ""}
+            </p>
+          )}
           <div className="mt-4 flex justify-center gap-3">
+            {career && (
+              <button
+                onClick={() => setSeasonEnd(true)}
+                className="rounded-lg bg-emerald-500 px-5 py-2 font-bold text-slate-950 hover:bg-emerald-400"
+              >
+                Continue to season {career.season + 1} →
+              </button>
+            )}
             <button onClick={share}
               className="rounded-lg bg-amber-500 px-5 py-2 font-bold text-slate-950 hover:bg-amber-400">
               {copied ? "Copied ✓" : "Share result"}
@@ -357,6 +374,10 @@ export default function Results() {
           })}
         </div>
       </div>
+
+      <AnimatePresence>
+        {seasonEnd && career && <SeasonEnd onClose={() => setSeasonEnd(false)} />}
+      </AnimatePresence>
 
       <AnimatePresence>
         {openMatch && (

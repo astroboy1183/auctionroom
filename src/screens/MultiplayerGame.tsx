@@ -81,6 +81,8 @@ export default function MultiplayerGame({ roomCode, name, spectate, onLeave }: P
         auction={room.auction}
         franchiseId={room.franchiseId}
         isHost={room.isHost}
+        settings={room.settings}
+        onSettings={(settings) => room.send({ type: "settings", settings })}
         onStart={() => room.send({ type: "start" })}
         onLeave={onLeave}
       />

@@ -10,6 +10,11 @@ import { attachBotPersonalities } from "../engine/bots";
 import { assignFormerPlayers } from "../engine/rtm";
 import { applyRetentions, auctionPool } from "../engine/retentions";
 import { finishAuction } from "../engine/autoplay";
+import {
+  applyForm, autoRetain, closeSeason, newCareer, purseAfterRetentions,
+  type Career,
+} from "../engine/career";
+import { playTournament } from "../engine/tournament";
 import { seedRng } from "../engine/rng";
 import { clearSave, loadGame } from "../lib/persist";
 import playersJson from "../data/players.json";
@@ -41,9 +46,13 @@ interface GameStore {
   /** Set while playing an online room; null in solo play. */
   roomCode: string | null;
   playerName: string;
+  /** Non-null while playing a career; null for one-off auctions. */
+  career: Career | null;
   dispatch: (event: AuctionEvent) => void;
   startGame: (humanId: string, difficulty: Difficulty, seed?: number) => void;
   resumeGame: () => boolean;
+  /** Run an entire auction start-to-finish without bidding, then show results. */
+  simulateWholeAuction: (humanId: string, difficulty: Difficulty, seed?: number) => void;
   toggleSound: () => void;
   toggleView3d: () => void;
   setSkipping: (v: boolean) => void;
@@ -55,6 +64,10 @@ interface GameStore {
   setRoom: (code: string | null, name?: string) => void;
   /** Hand the rest of the auction to the simulation and jump to the result. */
   finishForMe: () => void;
+  startCareer: (humanId: string, difficulty: Difficulty) => void;
+  /** Score the finished season, then set up the next one with retentions. */
+  advanceSeason: (retained: string[]) => void;
+  quitCareer: () => void;
   reset: () => void;
 }
 
@@ -76,6 +89,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lobbySeed: LOBBY_SEED,
   roomCode: null,
   playerName: "",
+  career: null,
   preview: applyRetentions(makeDefaultFranchises(), allPlayers, LOBBY_SEED + 3),
   dispatch: (event) => set((s) => ({ auction: applyEvent(s.auction, event) })),
   startGame: (humanId, difficulty, replaySeed) =>
@@ -117,14 +131,75 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   // Must clear transient per-lot UI state too, or "Play again" can start the
   // next auction still in fast-forward.
+  simulateWholeAuction: (humanId, difficulty, replaySeed) => {
+    get().startGame(humanId, difficulty, replaySeed);
+    const { auction, shortlist } = get();
+    const { state } = finishAuction(auction, humanId, seedRng(auction.rngSeed), shortlist);
+    set({ auction: state, skipping: false });
+  },
   resumeGame: () => {
     const save = loadGame();
     if (!save) return false;
     set({ auction: save.auction, humanId: save.humanId, shortlist: save.shortlist, skipping: false });
     return true;
   },
+  startCareer: (humanId, difficulty) => {
+    set({ career: newCareer(humanId) });
+    get().startGame(humanId, difficulty);
+  },
+
+  advanceSeason: (retained) => {
+    const { career, auction, humanId, difficulty } = get();
+    if (!career || auction.phase !== "finished") return;
+
+    // Score the season that just finished, then carry squads forward.
+    const tournament = playTournament(auction.franchises, auction.rngSeed);
+    const closed = closeSeason(career, tournament, auction.franchises);
+    const scored: Career = {
+      ...closed,
+      season: career.season + 1,
+      carried: Object.fromEntries(
+        auction.franchises.map((f) => [
+          f.id,
+          f.id === humanId ? retained : autoRetain(f, closed),
+        ]),
+      ),
+    };
+
+    // Next season's pool carries the form every player earned last year.
+    const seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
+    const formedAll = applyForm(allPlayers, scored);
+    const formedPool = auctionPool(formedAll);
+    const keptById = new Map(
+      auction.franchises.flatMap((f) => f.squad.map((p) => [p.id, f.id] as const)),
+    );
+
+    let franchises = makeDefaultFranchises(humanId).map((f) => {
+      const keep = scored.carried[f.id] ?? [];
+      const squad = keep
+        .map((id) => formedAll.find((p) => p.id === id))
+        .filter((p): p is Player => Boolean(p) && keptById.get(p!.id) === f.id);
+      return { ...f, squad, retained: squad.map((p) => p.id), budget: purseAfterRetentions(squad.length) };
+    });
+    // Retained players are out of this year's auction.
+    const retainedIds = new Set(franchises.flatMap((f) => f.retained));
+    const seasonPool = formedPool.filter((p) => !retainedIds.has(p.id));
+
+    franchises = attachBotPersonalities(franchises, DIFFICULTY_MULT[difficulty], seed + 2);
+    franchises = assignFormerPlayers(franchises, seasonPool, seed + 1);
+
+    set({
+      career: scored,
+      auction: applyEvent(createInitialState(seasonPool, franchises), { type: "START", seed }),
+      skipping: false,
+      outbid: null,
+    });
+  },
+
+  quitCareer: () => set({ career: null }),
+
   reset: () => {
     clearSave();
-    set({ auction: fresh(), skipping: false, outbid: null });
+    set({ auction: fresh(), skipping: false, outbid: null, career: null });
   },
 }));

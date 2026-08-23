@@ -4,7 +4,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AuctionState } from "../engine/types";
-import type { ChatEntry, ClientMessage, ReactionEvent, Seat, ServerMessage } from "../../worker/src/protocol";
+import {
+  DEFAULT_SETTINGS,
+  type ChatEntry, type ClientMessage, type LeaderboardEntry, type ReactionEvent,
+  type RoomSettings, type Seat, type ServerMessage,
+} from "../../worker/src/protocol";
 
 const WORKER_URL = import.meta.env.VITE_ROOMS_URL ?? "https://auctionroom-rooms.jayanthapalla.workers.dev";
 
@@ -22,12 +26,24 @@ export interface RoomConnection {
   reactions: ReactionEvent[];
   /** Latest line from the LLM commentator, or null when unavailable. */
   commentary: { text: string; at: number } | null;
+  settings: RoomSettings;
   error: string | null;
   send: (msg: ClientMessage) => void;
 }
 
 function tokenKey(code: string): string {
   return `auctionroom:token:${code}`;
+}
+
+/** Cross-room leaderboard — best human results across every auction played. */
+export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+  try {
+    const res = await fetch(`${WORKER_URL}/api/leaderboard`);
+    if (!res.ok) return [];
+    return (await res.json()) as LeaderboardEntry[];
+  } catch {
+    return [];
+  }
 }
 
 export async function createRoom(): Promise<string> {
@@ -48,6 +64,7 @@ export function useRoom(code: string | null, name: string, spectate = false): Ro
   const [chat, setChat] = useState<ChatEntry[]>([]);
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
   const [commentary, setCommentary] = useState<{ text: string; at: number } | null>(null);
+  const [settings, setSettings] = useState<RoomSettings>(DEFAULT_SETTINGS);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -81,6 +98,7 @@ export function useRoom(code: string | null, name: string, spectate = false): Ro
         setAuction(msg.auction);
         setSeats(msg.seats);
         setSpectators(msg.spectators);
+        setSettings(msg.settings);
       } else if (msg.type === "chat_history") {
         setChat(msg.entries);
       } else if (msg.type === "chat") {
@@ -112,6 +130,6 @@ export function useRoom(code: string | null, name: string, spectate = false): Ro
 
   return {
     status, auction, seats, franchiseId, isHost, spectating, spectators,
-    chat, reactions, commentary, error, send,
+    chat, reactions, commentary, settings, error, send,
   };
 }

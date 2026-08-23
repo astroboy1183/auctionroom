@@ -10,6 +10,9 @@ import HallBackdrop from "../components/HallBackdrop";
 import ShortlistPlanner from "./ShortlistPlanner";
 import { createRoom } from "../hooks/useRoom";
 import { loadGame } from "../lib/persist";
+import HowToPlay, { hasSeenHowTo } from "../components/HowToPlay";
+import SoundMixer, { loadMix } from "../components/SoundMixer";
+import { setMix } from "../lib/audio";
 
 const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
   { id: "easy", label: "Easy", blurb: "bots keep their wallets shut" },
@@ -19,6 +22,8 @@ const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
 
 export default function Lobby() {
   const startGame = useGameStore((s) => s.startGame);
+  const simulateWholeAuction = useGameStore((s) => s.simulateWholeAuction);
+  const startCareer = useGameStore((s) => s.startCareer);
   const [picked, setPicked] = useState("hyd");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [planning, setPlanning] = useState(false);
@@ -29,6 +34,10 @@ export default function Lobby() {
   const resumeGame = useGameStore((s) => s.resumeGame);
   const [saved] = useState(() => loadGame());
   const [seedInput, setSeedInput] = useState("");
+  const [howTo, setHowTo] = useState(() => !hasSeenHowTo());
+  const [mixer, setMixer] = useState(false);
+  // Restore the saved mix once, before anything makes a sound.
+  useState(() => setMix(loadMix()));
 
   const enterRoom = (code: string) => {
     const name = playerName.trim() || "Player";
@@ -183,12 +192,39 @@ export default function Lobby() {
         >
           Start Auction
         </motion.button>
+        <button
+          onClick={() => startCareer(picked, difficulty)}
+          title="Play season after season — squads carry over and players build a record"
+          className="mt-3 w-full rounded-xl border border-emerald-600/50 bg-emerald-500/10 py-2.5 text-sm font-bold text-emerald-300 hover:bg-emerald-500/20"
+        >
+          🏆 Start a career
+        </button>
+
+        <button
+          onClick={() => simulateWholeAuction(picked, difficulty)}
+          title="Your assistant runs the whole auction; jump straight to the season"
+          className="mt-2 w-full rounded-xl border border-slate-800 py-2 text-xs font-bold text-slate-400 hover:bg-slate-800/60"
+        >
+          ⏭⏭ Simulate the whole auction
+        </button>
+
+        <div className="mt-3 flex justify-center gap-3 text-[11px] text-slate-500">
+          <button onClick={() => setHowTo(true)} className="hover:text-slate-300">How to play</button>
+          <span>·</span>
+          <button onClick={() => setMixer(true)} className="hover:text-slate-300">Sound</button>
+        </div>
         <p className="mt-3 text-center text-[10px] text-slate-600">
           Fictional franchises · unofficial fan game · players shown with public role/stat info only
         </p>
       </motion.div>
       <AnimatePresence>
         {planning && <ShortlistPlanner onClose={() => setPlanning(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {howTo && <HowToPlay onClose={() => setHowTo(false)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {mixer && <SoundMixer onClose={() => setMixer(false)} />}
       </AnimatePresence>
     </div>
   );

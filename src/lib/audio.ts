@@ -7,6 +7,34 @@ let dry: GainNode | null = null;   // direct signal
 let wet: GainNode | null = null;   // reverb send
 let master: GainNode | null = null;
 
+/** Per-channel levels, 0–1. The auctioneer is speech and mixes separately. */
+export interface Mix {
+  master: number;
+  effects: number;
+  crowd: number;
+  voice: number;
+}
+
+export const DEFAULT_MIX: Mix = { master: 0.9, effects: 1, crowd: 1, voice: 1 };
+let mix: Mix = { ...DEFAULT_MIX };
+
+export function setMix(next: Partial<Mix>): void {
+  mix = { ...mix, ...next };
+  if (master) master.gain.value = mix.master;
+  if (crowd && ctx) {
+    // Re-level the running crowd bed immediately.
+    crowd.gain.gain.cancelScheduledValues(ctx.currentTime);
+    crowd.gain.gain.setValueAtTime(crowdBase * mix.crowd, ctx.currentTime);
+  }
+}
+
+export function getMix(): Mix {
+  return { ...mix };
+}
+
+/** The crowd's resting level before the per-channel multiplier. */
+const crowdBase = 0.05;
+
 /** Build a decaying-noise impulse response — a plausible large hall. */
 function impulse(c: AudioContext, seconds = 2.6, decay = 2.4): AudioBuffer {
   const len = Math.floor(c.sampleRate * seconds);
@@ -28,7 +56,7 @@ function audio(): AudioContext | null {
     if (!ctx) {
       ctx = new AudioContext();
       master = ctx.createGain();
-      master.gain.value = 0.9;
+      master.gain.value = mix.master;
       const comp = ctx.createDynamicsCompressor();
       comp.threshold.value = -18;
       comp.ratio.value = 5;
@@ -68,6 +96,8 @@ function struck(
 ): void {
   const c = audio();
   if (!c) return;
+  vol *= mix.effects;
+  if (vol <= 0.0001) return;
   const bus = c.createGain();
   bus.gain.value = 1;
   send(bus, wetAmount);
@@ -93,6 +123,8 @@ function noiseHit(
 ): void {
   const c = audio();
   if (!c) return;
+  vol *= mix.effects;
+  if (vol <= 0.0001) return;
   const len = Math.max(1, Math.floor(c.sampleRate * dur));
   const buf = c.createBuffer(1, len, c.sampleRate);
   const d = buf.getChannelData(0);
@@ -210,7 +242,7 @@ export function startCrowd(): void {
   filter.Q.value = 0.6;
   const gain = c.createGain();
   gain.gain.value = 0;
-  gain.gain.linearRampToValueAtTime(0.05, c.currentTime + 1.8);
+  gain.gain.linearRampToValueAtTime(crowdBase * mix.crowd, c.currentTime + 1.8);
   const a = mk(0.018);
   const b = mk(0.011);
   b.playbackRate.value = 0.87;
@@ -240,11 +272,11 @@ export function crowdSwell(intensity = 1): void {
   const g = crowd.gain.gain;
   const f = crowd.filter.frequency;
   const now = c.currentTime;
-  const peak = 0.05 + 0.11 * intensity;
+  const peak = (crowdBase + 0.11 * intensity) * mix.crowd;
   g.cancelScheduledValues(now);
   g.setValueAtTime(g.value, now);
   g.linearRampToValueAtTime(peak, now + 0.25);
-  g.linearRampToValueAtTime(0.05, now + 1.8 + intensity);
+  g.linearRampToValueAtTime(crowdBase * mix.crowd, now + 1.8 + intensity);
   f.cancelScheduledValues(now);
   f.setValueAtTime(f.value, now);
   f.linearRampToValueAtTime(480 + 1100 * intensity, now + 0.25);
@@ -290,7 +322,8 @@ export function speak(text: string, interrupt = true, pitch = 0.92, rate = 1.04)
     if (voice) u.voice = voice;
     u.rate = rate;
     u.pitch = pitch;
-    u.volume = 1;
+    u.volume = mix.voice;
+    if (mix.voice <= 0.01) return; // muted channel: don't queue speech at all
     synth.speak(u);
   } catch {
     /* no speech support — silently fine */
@@ -334,7 +367,8 @@ export function speakTeam(text: string, v: TeamVoice, minGapMs = 1500): void {
     if (pool.length) u.voice = pool[v.voiceIndex % pool.length];
     u.pitch = v.pitch;
     u.rate = v.rate;
-    u.volume = 0.85;
+    u.volume = 0.85 * mix.voice;
+    if (mix.voice <= 0.01) return;
     synth.speak(u);
   } catch {
     /* ignore */

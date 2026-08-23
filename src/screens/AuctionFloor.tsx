@@ -21,6 +21,7 @@ import SquadDrawer from "../components/SquadDrawer";
 import FinishModal from "../components/FinishModal";
 import { useAutosave } from "../hooks/useAutosave";
 import { useKeyboard } from "../hooks/useKeyboard";
+import SoundMixer from "../components/SoundMixer";
 
 // The 3D hall is a heavy chunk; it loads lazily and only when enabled.
 const Hall = lazy(() => import("../scene/Hall"));
@@ -43,6 +44,7 @@ export default function AuctionFloor() {
   const roomCode = useGameStore((s) => s.roomCode);
   const finishForMe = useGameStore((s) => s.finishForMe);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [mixer, setMixer] = useState(false);
   // Online rooms are server-authoritative: no local save, no local skip.
   useAutosave(!roomCode);
   // The alert clears itself; there is no tick during rtm/sold to re-render it.
@@ -122,10 +124,18 @@ export default function AuctionFloor() {
           </button>
           <button
             onClick={() => { if (soundOn) hushAuctioneer(); toggleSound(); }}
-            title={soundOn ? "mute" : "unmute"}
+            onContextMenu={(e) => { e.preventDefault(); setMixer(true); }}
+            title={soundOn ? "mute (right-click for the mixer)" : "unmute"}
             className="rounded-md bg-slate-950/60 px-2 py-1 text-base leading-none backdrop-blur-md hover:bg-slate-800/70"
           >
             {soundOn ? "🔊" : "🔇"}
+          </button>
+          <button
+            onClick={() => setMixer(true)}
+            title="Sound levels"
+            className="rounded-md bg-slate-950/60 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 backdrop-blur-md hover:bg-slate-800/70"
+          >
+            mix
           </button>
         </div>
       </header>
@@ -222,6 +232,9 @@ export default function AuctionFloor() {
       </AnimatePresence>
       <AnimatePresence>
         {auction.phase === "rtm" && <RtmModal auction={auction} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {mixer && <SoundMixer onClose={() => setMixer(false)} />}
       </AnimatePresence>
       <AnimatePresence>
         {confirmFinish && (

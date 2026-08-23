@@ -16,9 +16,11 @@ import { seedRng, shuffle, type Rng } from "../../src/engine/rng";
 import type { AuctionState, Player } from "../../src/engine/types";
 import playersJson from "../../src/data/players.json";
 import {
-  isValidRoomCode, makeRoomCode, REACTIONS,
-  type ChatEntry, type ClientMessage, type Seat, type ServerMessage,
+  DEFAULT_SETTINGS, isValidRoomCode, makeRoomCode, REACTIONS,
+  type ChatEntry, type ClientMessage, type LeaderboardEntry, type RoomSettings,
+  type Seat, type ServerMessage,
 } from "./protocol";
+import { playTournament } from "../../src/engine/tournament";
 
 const ALL_PLAYERS = playersJson as Player[];
 const POOL = auctionPool(ALL_PLAYERS);
@@ -48,6 +50,9 @@ interface Persisted {
   chat: ChatEntry[];
   /** Per-room commentary call count, for the cost cap. */
   commentaryCalls: number;
+  settings: RoomSettings;
+  /** Set once the season has been scored, so results survive a rejoin. */
+  leaderboardPosted: boolean;
 }
 
 /** Keep the backlog small: it ships with every join and lives in DO storage. */
@@ -94,6 +99,8 @@ export class AuctionRoom extends DurableObject<Env> {
       rtmDeadline: null,
       chat: [],
       commentaryCalls: 0,
+      settings: { ...DEFAULT_SETTINGS },
+      leaderboardPosted: false,
     };
   }
 
@@ -106,6 +113,21 @@ export class AuctionRoom extends DurableObject<Env> {
   async fetch(request: Request): Promise<Response> {
     await this.ready;
     const url = new URL(request.url);
+
+    // One well-known instance doubles as the global leaderboard store.
+    if (url.pathname === "/leaderboard") {
+      const stored = (await this.ctx.storage.get<LeaderboardEntry[]>("board")) ?? [];
+      if (request.method === "POST") {
+        const incoming = (await request.json()) as LeaderboardEntry[];
+        const merged = [...stored, ...incoming]
+          .sort((a, b) => b.points - a.points || b.squadStrength - a.squadStrength)
+          .slice(0, 50);
+        await this.ctx.storage.put("board", merged);
+        return new Response("ok");
+      }
+      return Response.json(stored);
+    }
+
     const code = url.searchParams.get("code") ?? "";
     if (this.state.code === "") {
       this.state.code = code;
@@ -148,8 +170,31 @@ export class AuctionRoom extends DurableObject<Env> {
         }
         await this.startAuction();
         break;
+      case "settings": {
+        if (att.token !== this.state.hostToken) {
+          return this.send(ws, { type: "error", message: "only the host can change settings" });
+        }
+        if (this.state.auction.phase !== "lobby") {
+          return this.send(ws, { type: "error", message: "settings are locked once the auction starts" });
+        }
+        const s = msg.settings;
+        this.state.settings = {
+          difficulty: s.difficulty ?? this.state.settings.difficulty,
+          // Clamp: a 3-second lot is unplayable, a 60-second one is a nap.
+          lotSeconds: Math.max(6, Math.min(30, s.lotSeconds ?? this.state.settings.lotSeconds)),
+        };
+        await this.persist();
+        this.broadcastState();
+        break;
+      }
       case "bid":
         await this.dispatch({ type: "BID", franchiseId: att.franchiseId });
+        // Honour a custom lot length without touching the engine's constants.
+        if (this.state.auction.phase === "bidding" && this.state.settings.lotSeconds !== LOT_SECONDS) {
+          this.state.auction = { ...this.state.auction, timer: this.state.settings.lotSeconds };
+          await this.persist();
+          this.broadcastState();
+        }
         break;
       case "pass":
         await this.dispatch({ type: "PASS", franchiseId: att.franchiseId });
@@ -283,6 +328,15 @@ export class AuctionRoom extends DurableObject<Env> {
   private async startAuction(): Promise<void> {
     if (this.state.auction.phase !== "lobby") return;
     const seed = Math.floor(Date.now() % 0xffffffff);
+    const mult = { easy: 0.7, normal: 1, hard: 1.3 }[this.state.settings.difficulty];
+    // Re-personalise the bot seats at the host's chosen difficulty.
+    this.state.auction = {
+      ...this.state.auction,
+      franchises: attachBotPersonalities(this.state.auction.franchises, mult, seed + 2)
+        .map((f, i) => (this.state.auction.franchises[i].isHuman
+          ? { ...this.state.auction.franchises[i] }
+          : f)),
+    };
     this.state.auction = applyEvent(this.state.auction, { type: "START", seed });
     await this.persist();
     this.broadcastState();
@@ -443,10 +497,43 @@ export class AuctionRoom extends DurableObject<Env> {
 
     const moment = this.momentFor(before, this.state.auction);
     if (moment) this.fireCommentary(moment);
+    if (this.state.auction.phase === "finished" && !this.state.leaderboardPosted) {
+      this.state.leaderboardPosted = true;
+      this.ctx.waitUntil(this.postLeaderboard());
+    }
 
     await this.persist();
     this.broadcastState();
     await this.scheduleNext();
+  }
+
+  /** Publish this room's human results to the cross-room leaderboard. */
+  private async postLeaderboard(): Promise<void> {
+    try {
+      const t = playTournament(this.state.auction.franchises, this.state.auction.rngSeed);
+      const entries: LeaderboardEntry[] = [];
+      for (const seat of this.state.seats) {
+        if (!seat.isHuman) continue;
+        const row = t.table.find((r) => r.franchiseId === seat.franchiseId);
+        const f = this.state.auction.franchises.find((x) => x.id === seat.franchiseId);
+        if (!row || !f) continue;
+        entries.push({
+          name: seat.name,
+          franchise: f.name,
+          points: row.points,
+          won: row.won,
+          squadStrength: Math.round(row.strength.overall),
+          at: Date.now(),
+        });
+      }
+      if (entries.length === 0) return;
+      const board = this.env.ROOMS.getByName("__leaderboard__");
+      await board.fetch(
+        new Request("https://room/leaderboard", { method: "POST", body: JSON.stringify(entries) }),
+      );
+    } catch {
+      /* the leaderboard is a nicety; never let it break a finished auction */
+    }
   }
 
   // ------------------------------------------------------------ broadcast
@@ -482,6 +569,7 @@ export class AuctionRoom extends DurableObject<Env> {
       seats: this.state.seats,
       hostId: this.state.hostToken ? this.state.tokens[this.state.hostToken] ?? null : null,
       spectators,
+      settings: this.state.settings,
     });
   }
 }
@@ -515,6 +603,14 @@ export default {
       }
       const stub = env.ROOMS.getByName(code);
       return stub.fetch(new Request(`https://room/?code=${code}`, request));
+    }
+
+    if (url.pathname === "/api/leaderboard" && request.method === "GET") {
+      const board = env.ROOMS.getByName("__leaderboard__");
+      const res = await board.fetch(new Request("https://room/leaderboard"));
+      return new Response(res.body, {
+        headers: { ...CORS, "content-type": "application/json" },
+      });
     }
 
     return new Response("not found", { status: 404, headers: CORS });

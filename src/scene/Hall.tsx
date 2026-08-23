@@ -710,12 +710,27 @@ function Scene({ mode }: { mode: HallMode }) {
   );
 }
 
+/**
+ * Weak-device detection. A phone rendering at 3x pixel ratio with full
+ * antialiasing is the fastest way to make this hall unplayable, so cap the
+ * quality up front rather than waiting for the frame rate to collapse.
+ */
+function qualityProfile(): { dpr: [number, number]; antialias: boolean } {
+  if (typeof navigator === "undefined") return { dpr: [1, 1.75], antialias: true };
+  const cores = navigator.hardwareConcurrency ?? 4;
+  const memory = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 4;
+  const narrow = typeof window !== "undefined" && window.innerWidth < 820;
+  const weak = cores <= 4 || memory <= 4 || narrow;
+  return weak ? { dpr: [1, 1.25], antialias: false } : { dpr: [1, 1.75], antialias: true };
+}
+
 export default function Hall({ mode = "auction" }: { mode?: HallMode }) {
+  const quality = useMemo(qualityProfile, []);
   return (
     <div className="fixed inset-0 -z-10" aria-hidden>
       <Canvas
-        dpr={[1, 1.75]}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        dpr={quality.dpr}
+        gl={{ antialias: quality.antialias, powerPreference: "high-performance" }}
         camera={{ position: [0, 4.1, 10], fov: 54 }}
       >
         <color attach="background" args={["#020617"]} />

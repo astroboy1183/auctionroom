@@ -2,6 +2,23 @@
 
 import type { AuctionState } from "../../src/engine/types";
 
+export interface RoomSettings {
+  difficulty: "easy" | "normal" | "hard";
+  /** Seconds on each lot. Humans need longer than bots. */
+  lotSeconds: number;
+}
+
+export const DEFAULT_SETTINGS: RoomSettings = { difficulty: "normal", lotSeconds: 10 };
+
+export interface LeaderboardEntry {
+  name: string;
+  franchise: string;
+  points: number;
+  won: number;
+  squadStrength: number;
+  at: number;
+}
+
 export interface Seat {
   franchiseId: string;
   name: string;          // display name of the human, or the bot personality
@@ -30,6 +47,7 @@ export type ClientMessage =
   | { type: "chat"; text: string }
   | { type: "react"; emoji: string }
   | { type: "start" }
+  | { type: "settings"; settings: Partial<RoomSettings> }
   | { type: "bid" }
   | { type: "pass" }
   | { type: "rtm_offer"; useCard: boolean }
@@ -38,7 +56,15 @@ export type ClientMessage =
 
 export type ServerMessage =
   | { type: "welcome"; token: string; franchiseId: string | null; roomCode: string; isHost: boolean; spectating: boolean }
-  | { type: "state"; auction: AuctionState; seats: Seat[]; hostId: string | null; spectators: number }
+  | {
+      type: "state";
+      auction: AuctionState;
+      seats: Seat[];
+      hostId: string | null;
+      spectators: number;
+      settings: RoomSettings;
+    }
+  | { type: "leaderboard"; entries: LeaderboardEntry[] }
   | { type: "chat"; entry: ChatEntry }
   | { type: "chat_history"; entries: ChatEntry[] }
   | { type: "react"; event: ReactionEvent }
