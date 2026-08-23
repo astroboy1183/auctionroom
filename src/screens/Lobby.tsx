@@ -9,6 +9,7 @@ import { START_BUDGET } from "../engine/franchises";
 import HallBackdrop from "../components/HallBackdrop";
 import ShortlistPlanner from "./ShortlistPlanner";
 import { createRoom } from "../hooks/useRoom";
+import { loadGame } from "../lib/persist";
 
 const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
   { id: "easy", label: "Easy", blurb: "bots keep their wallets shut" },
@@ -25,6 +26,9 @@ export default function Lobby() {
   const [playerName, setPlayerName] = useState("");
   const [busy, setBusy] = useState(false);
   const setRoom = useGameStore((s) => s.setRoom);
+  const resumeGame = useGameStore((s) => s.resumeGame);
+  const [saved] = useState(() => loadGame());
+  const [seedInput, setSeedInput] = useState("");
 
   const enterRoom = (code: string) => {
     const name = playerName.trim() || "Player";
@@ -57,6 +61,16 @@ export default function Lobby() {
         <p className="mt-2 text-center text-sm text-slate-400">
           100 cricketers. {money(START_BUDGET)} purse, less retentions. 7 rival bots.
         </p>
+
+        {saved && (
+          <button
+            onClick={() => resumeGame()}
+            className="mt-5 w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-3 text-sm font-bold text-emerald-300 hover:bg-emerald-500/20"
+          >
+            ▸ Resume auction — {saved.auction.poolIndex} lots in,
+            {" "}{new Date(saved.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </button>
+        )}
 
         <h2 className="mt-8 text-xs font-black uppercase tracking-widest text-slate-500">Your franchise</h2>
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -135,6 +149,22 @@ export default function Lobby() {
             className="mt-2 w-full rounded-lg border border-slate-700 py-2 text-sm font-bold text-slate-300 hover:bg-slate-800/60 disabled:opacity-50"
           >
             {busy ? "Creating…" : "Create a room"}
+          </button>
+        </div>
+
+        <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+          <input
+            value={seedInput}
+            onChange={(e) => setSeedInput(e.target.value.replace(/\D/g, "").slice(0, 12))}
+            placeholder="Replay a seed"
+            className="w-full rounded-lg bg-slate-900 px-3 py-2 font-mono text-sm outline-none ring-slate-700 focus:ring-1"
+          />
+          <button
+            disabled={!seedInput}
+            onClick={() => startGame(picked, difficulty, Number(seedInput))}
+            className="rounded-lg bg-slate-700 px-4 text-sm font-bold enabled:hover:bg-slate-600 disabled:opacity-40"
+          >
+            Replay
           </button>
         </div>
 

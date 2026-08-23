@@ -3,8 +3,9 @@
 // formula. Pure and seeded like everything else in engine/.
 
 import type { Franchise, Player, Role } from "./types";
-import { nextFloat, seedRng, type Rng } from "./rng";
+import { seedRng, type Rng } from "./rng";
 import { MIN_ROLES } from "./rules";
+import { bowlingRating, playMatch as playBallByBall, scoreline, type Match } from "./match";
 
 /** Best N ratings for a role, padded with a replacement-level filler so a
  * short squad is punished rather than crashing. */
@@ -25,14 +26,23 @@ export interface Strength {
 }
 
 /**
- * Squad → match strength. Batting leans on the top six who can hold a bat,
- * bowling on the five who bowl; all-rounders count for both, which is what
- * makes them worth overpaying for.
+ * Squad → match strength. This is a *predictor* of the ball-by-ball result,
+ * not the thing that decides it, so it has to model the same pressures:
+ * batting from the top six, and bowling from the five who will actually have
+ * to bowl — including any part-timer dragged in to cover the four-over cap.
  */
 export function squadStrength(franchise: Franchise): Strength {
   const squad = franchise.squad;
   const batting = avg(topRatings(squad, ["BAT", "WK", "AR"], 6));
-  const bowling = avg(topRatings(squad, ["BOWL", "AR"], 5));
+
+  // Exactly five bowlers get used; a thin attack has to include a batter,
+  // and bowlingRating() makes that cost visible here as it does in a match.
+  const attack = [...squad]
+    .sort((a, b) => bowlingRating(b) - bowlingRating(a))
+    .slice(0, 5)
+    .map(bowlingRating);
+  while (attack.length < 5) attack.push(REPLACEMENT - 20);
+  const bowling = avg(attack);
 
   // A structurally illegal squad cannot field a proper XI.
   let penalty = 0;
@@ -59,6 +69,11 @@ export interface MatchResult {
   homeScore: number;
   awayScore: number;
   winnerId: string;
+  /** The full ball-by-ball match behind this result. */
+  detail: Match;
+  homeLine: string;
+  awayLine: string;
+  margin: string;
 }
 
 export interface TableRow {
@@ -71,25 +86,23 @@ export interface TableRow {
   strength: Strength;
 }
 
-/** One match: batting probed against the opponent's bowling, plus variance —
- * the better squad usually wins, but not always, which is the point. */
-function playMatch(a: Franchise, b: Franchise, sa: Strength, sb: Strength, rng: Rng): [MatchResult, Rng] {
-  let r = rng;
-  const roll = (): number => {
-    const [f, next] = nextFloat(r);
-    r = next;
-    return f;
-  };
-  // Score ≈ how far batting outguns the opposing attack, on a T20-ish scale.
-  const score = (bat: number, bowl: number, luck: number): number =>
-    Math.round(120 + (bat - bowl) * 2.6 + (luck - 0.5) * 46);
-
-  const homeScore = score(sa.batting, sb.bowling, roll());
-  const awayScore = score(sb.batting, sa.bowling, roll());
-  const tieBreak = roll() < 0.5;
-  const winnerId =
-    homeScore === awayScore ? (tieBreak ? a.id : b.id) : homeScore > awayScore ? a.id : b.id;
-  return [{ homeId: a.id, awayId: b.id, homeScore, awayScore, winnerId }, r];
+/** One match, played ball by ball. The result carries the full scorecard. */
+function playMatch(a: Franchise, b: Franchise, rng: Rng): [MatchResult, Rng] {
+  const [m, next] = playBallByBall(a, b, rng);
+  return [
+    {
+      homeId: a.id,
+      awayId: b.id,
+      homeScore: m.first.runs,
+      awayScore: m.second.runs,
+      winnerId: m.winnerId,
+      detail: m,
+      homeLine: scoreline(m.first),
+      awayLine: scoreline(m.second),
+      margin: m.margin,
+    },
+    next,
+  ];
 }
 
 export interface Tournament {
@@ -118,7 +131,7 @@ export function playTournament(franchises: Franchise[], seed: number): Tournamen
       const a = franchises[i];
       const b = franchises[j];
       let m: MatchResult;
-      [m, rng] = playMatch(a, b, strengths.get(a.id)!, strengths.get(b.id)!, rng);
+      [m, rng] = playMatch(a, b, rng);
       matches.push(m);
 
       const ra = rows.get(a.id)!;

@@ -6,6 +6,8 @@ import { motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { finalScores } from "../engine/scoring";
 import { playTournament, matchesFor } from "../engine/tournament";
+import { analyse } from "../engine/analytics";
+import { playerOfTheMatch } from "../engine/match";
 import { START_BUDGET } from "../engine/franchises";
 import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../engine/rules";
 import { money } from "../components/format";
@@ -26,7 +28,10 @@ export default function Results() {
     () => playTournament(auction.franchises, auction.rngSeed),
     [auction.franchises, auction.rngSeed],
   );
-  const [tab, setTab] = useState<"table" | "squads">("table");
+  const [tab, setTab] = useState<"table" | "squads" | "auction">("table");
+  const stats = useMemo(() => analyse(auction, START_BUDGET), [auction]);
+  const startGame = useGameStore((s) => s.startGame);
+  const [seedCopied, setSeedCopied] = useState(false);
   const soundOn = useGameStore((s) => s.soundOn);
   useEffect(() => {
     if (soundOn) fanfare();
@@ -86,13 +91,13 @@ export default function Results() {
         </motion.div>
 
         <div className="mx-auto mt-8 flex w-fit gap-1 rounded-lg bg-slate-950/70 p-1 backdrop-blur-md">
-          {(["table", "squads"] as const).map((k) => (
+          {(["table", "auction", "squads"] as const).map((k) => (
             <button
               key={k}
               onClick={() => setTab(k)}
               className={`rounded px-4 py-1.5 text-sm font-bold ${tab === k ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:bg-slate-800/70"}`}
             >
-              {k === "table" ? "Points table" : "Squads"}
+              {k === "table" ? "Points table" : k === "auction" ? "Auction report" : "Squads"}
             </button>
           ))}
         </div>
@@ -160,7 +165,9 @@ export default function Results() {
                       <span
                         key={i}
                         className={`rounded px-2 py-1 text-[11px] font-semibold ${won ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}
-                        title={byId(oppId).name}
+                        title={`${m.homeLine} v ${m.awayLine} — won by ${m.margin}${
+                          playerOfTheMatch(m.detail) ? ` · ${playerOfTheMatch(m.detail)!.name} ${playerOfTheMatch(m.detail)!.line}` : ""
+                        }`}
                       >
                         {won ? "W" : "L"} {mine}–{theirs} v {byId(oppId).name.split(" ")[1]}
                       </span>
@@ -169,6 +176,70 @@ export default function Results() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {tab === "auction" && (
+          <div className="mx-auto mt-6 max-w-3xl space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { label: "Steal of the auction", h: stats.steal, tone: "text-emerald-400" },
+                { label: "Worst overpay", h: stats.overpay, tone: "text-red-400" },
+                { label: "Biggest sale", h: stats.biggestSale, tone: "text-amber-400" },
+              ].map(({ label, h, tone }) =>
+                h ? (
+                  <div key={label} className="rounded-xl bg-slate-950/75 p-4 backdrop-blur-md">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+                    <p className="mt-1 text-lg font-black">{h.player.name}</p>
+                    <p className="text-xs" style={{ color: h.franchise.color }}>{h.franchise.name}</p>
+                    <p className={`mt-1 font-mono text-xl font-black ${tone}`}>{money(h.price)}</p>
+                    <p className="text-[10px] text-slate-500">
+                      {h.ratio < 1 ? `${Math.round((1 - h.ratio) * 100)}% under` : `${Math.round((h.ratio - 1) * 100)}% over`} market
+                    </p>
+                  </div>
+                ) : null,
+              )}
+              {stats.mostContested && (
+                <div className="rounded-xl bg-slate-950/75 p-4 backdrop-blur-md">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Most contested lot</p>
+                  <p className="mt-1 text-lg font-black">{stats.mostContested.player.name}</p>
+                  <p className="text-xs text-slate-400">{stats.mostContested.bids} bids</p>
+                  <p className="mt-1 font-mono text-xl font-black text-violet-400">{money(stats.mostContested.price)}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl bg-slate-950/75 p-4 text-sm backdrop-blur-md">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">The room</p>
+              <p className="mt-1 text-slate-300">
+                {stats.soldCount} sold · {stats.unsoldCount} went unsold · {money(stats.totalSpend)} changed hands
+                {stats.fastestSpender && (
+                  <> · biggest spender <span style={{ color: stats.fastestSpender.franchise.color }}>
+                    {stats.fastestSpender.franchise.name}</span> ({money(stats.fastestSpender.spent)})</>
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Seed</span>
+                <code className="rounded bg-slate-800 px-2 py-1 font-mono text-xs text-amber-300">{auction.rngSeed}</code>
+                <button
+                  onClick={() => {
+                    void navigator.clipboard.writeText(String(auction.rngSeed));
+                    setSeedCopied(true);
+                    setTimeout(() => setSeedCopied(false), 1800);
+                  }}
+                  className="rounded bg-slate-800 px-2 py-1 text-xs font-bold hover:bg-slate-700"
+                >
+                  {seedCopied ? "Copied ✓" : "Copy"}
+                </button>
+                <button
+                  onClick={() => startGame(humanId, "normal", auction.rngSeed)}
+                  className="rounded bg-slate-800 px-2 py-1 text-xs font-bold hover:bg-slate-700"
+                >
+                  Replay this auction
+                </button>
+                <span className="text-[10px] text-slate-500">same pool, same bots, same everything</span>
+              </div>
+            </div>
           </div>
         )}
 

@@ -9,6 +9,9 @@ import { makeDefaultFranchises } from "../engine/franchises";
 import { attachBotPersonalities } from "../engine/bots";
 import { assignFormerPlayers } from "../engine/rtm";
 import { applyRetentions, auctionPool } from "../engine/retentions";
+import { finishAuction } from "../engine/autoplay";
+import { seedRng } from "../engine/rng";
+import { clearSave, loadGame } from "../lib/persist";
 import playersJson from "../data/players.json";
 
 const allPlayers = playersJson as Player[];
@@ -39,7 +42,8 @@ interface GameStore {
   roomCode: string | null;
   playerName: string;
   dispatch: (event: AuctionEvent) => void;
-  startGame: (humanId: string, difficulty: Difficulty) => void;
+  startGame: (humanId: string, difficulty: Difficulty, seed?: number) => void;
+  resumeGame: () => boolean;
   toggleSound: () => void;
   toggleView3d: () => void;
   setSkipping: (v: boolean) => void;
@@ -49,6 +53,8 @@ interface GameStore {
   removeTarget: (playerId: string) => void;
   clearShortlist: () => void;
   setRoom: (code: string | null, name?: string) => void;
+  /** Hand the rest of the auction to the simulation and jump to the result. */
+  finishForMe: () => void;
   reset: () => void;
 }
 
@@ -72,15 +78,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerName: "",
   preview: applyRetentions(makeDefaultFranchises(), allPlayers, LOBBY_SEED + 3),
   dispatch: (event) => set((s) => ({ auction: applyEvent(s.auction, event) })),
-  startGame: (humanId, difficulty) =>
+  startGame: (humanId, difficulty, replaySeed) =>
     set(() => {
       // UI-side seeding is allowed to use the clock; the engine only ever
       // sees the resulting number (CLAUDE.md §4). Retentions reuse the lobby
       // seed so the previewed squads are the ones actually dealt.
       const { lobbySeed } = get();
-      const seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
+      // A supplied seed replays an identical auction — same shuffle, same
+      // retentions, same bot behaviour (the engine is fully deterministic).
+      const seed = replaySeed ?? ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
       let franchises = makeDefaultFranchises(humanId);
-      franchises = applyRetentions(franchises, allPlayers, lobbySeed + 3);
+      franchises = applyRetentions(franchises, allPlayers, (replaySeed ?? lobbySeed) + 3);
       franchises = attachBotPersonalities(franchises, DIFFICULTY_MULT[difficulty], seed + 2);
       franchises = assignFormerPlayers(franchises, players, seed + 1);
       const lobby = createInitialState(players, franchises);
@@ -101,7 +109,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   clearShortlist: () => set({ shortlist: {} }),
   setRoom: (code, name) => set((s) => ({ roomCode: code, playerName: name ?? s.playerName })),
+  finishForMe: () =>
+    set((s) => {
+      if (s.auction.phase === "lobby" || s.auction.phase === "finished") return {};
+      const { state } = finishAuction(s.auction, s.humanId, seedRng(s.auction.rngSeed), s.shortlist);
+      return { auction: state, skipping: false };
+    }),
   // Must clear transient per-lot UI state too, or "Play again" can start the
   // next auction still in fast-forward.
-  reset: () => set({ auction: fresh(), skipping: false, outbid: null }),
+  resumeGame: () => {
+    const save = loadGame();
+    if (!save) return false;
+    set({ auction: save.auction, humanId: save.humanId, shortlist: save.shortlist, skipping: false });
+    return true;
+  },
+  reset: () => {
+    clearSave();
+    set({ auction: fresh(), skipping: false, outbid: null });
+  },
 }));

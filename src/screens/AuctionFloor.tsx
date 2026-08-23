@@ -18,6 +18,9 @@ import TargetStrip from "../components/TargetStrip";
 import RtmModal from "../components/RtmModal";
 import SoldBanner from "../components/SoldBanner";
 import SquadDrawer from "../components/SquadDrawer";
+import FinishModal from "../components/FinishModal";
+import { useAutosave } from "../hooks/useAutosave";
+import { useKeyboard } from "../hooks/useKeyboard";
 
 // The 3D hall is a heavy chunk; it loads lazily and only when enabled.
 const Hall = lazy(() => import("../scene/Hall"));
@@ -37,6 +40,11 @@ export default function AuctionFloor() {
   const outbid = useGameStore((s) => s.outbid);
   const clearOutbid = useGameStore((s) => s.clearOutbid);
   const shortlist = useGameStore((s) => s.shortlist);
+  const roomCode = useGameStore((s) => s.roomCode);
+  const finishForMe = useGameStore((s) => s.finishForMe);
+  const [confirmFinish, setConfirmFinish] = useState(false);
+  // Online rooms are server-authoritative: no local save, no local skip.
+  useAutosave(!roomCode);
   // The alert clears itself; there is no tick during rtm/sold to re-render it.
   useEffect(() => {
     if (!outbid) return;
@@ -47,6 +55,17 @@ export default function AuctionFloor() {
 
   const player = auction.currentPlayer;
   const human = auction.franchises.find((f) => f.id === humanId)!;
+
+  const bidNow = () => dispatch({ type: "BID", franchiseId: humanId });
+  const passNow = () => { whoosh(); dispatch({ type: "PASS", franchiseId: humanId }); };
+  const skipNow = () => { whoosh(); dispatch({ type: "PASS", franchiseId: humanId }); setSkipping(true); };
+  useKeyboard({
+    onBid: () => { if (canBid(auction, humanId).ok) bidNow(); },
+    onPass: passNow,
+    onSkip: skipNow,
+    enabled: auction.phase === "bidding" && !squadOpen && !confirmFinish,
+  });
+
   if (!player) return null;
 
   const set = auction.sets.find((s) => s.id === player.setId);
@@ -85,6 +104,15 @@ export default function AuctionFloor() {
           <span className="rounded-md bg-slate-950/60 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 backdrop-blur-md">
             {remaining} to go
           </span>
+          {!roomCode && (
+            <button
+              onClick={() => setConfirmFinish(true)}
+              title="Skip the rest of the pool and simulate to the result"
+              className="rounded-md bg-slate-950/60 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 backdrop-blur-md hover:bg-slate-800/70"
+            >
+              ⏭ Skip pool
+            </button>
+          )}
           <button
             onClick={toggleView3d}
             title={view3d ? "switch to 2D view" : "switch to 3D hall"}
@@ -180,13 +208,9 @@ export default function AuctionFloor() {
           humanPassed={auction.passed.includes(humanId)}
           skipping={skipping}
           ceiling={shortlist[player.id]}
-          onBid={() => dispatch({ type: "BID", franchiseId: humanId })}
-          onPass={() => { whoosh(); dispatch({ type: "PASS", franchiseId: humanId }); }}
-          onSkip={() => {
-            whoosh();
-            dispatch({ type: "PASS", franchiseId: humanId });
-            setSkipping(true);
-          }}
+          onBid={bidNow}
+          onPass={passNow}
+          onSkip={skipNow}
         />
       </div>
 
@@ -198,6 +222,16 @@ export default function AuctionFloor() {
       </AnimatePresence>
       <AnimatePresence>
         {auction.phase === "rtm" && <RtmModal auction={auction} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {confirmFinish && (
+          <FinishModal
+            auction={auction}
+            humanId={humanId}
+            onConfirm={() => { setConfirmFinish(false); finishForMe(); }}
+            onCancel={() => setConfirmFinish(false)}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
