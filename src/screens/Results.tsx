@@ -5,6 +5,7 @@ import { fanfare } from "../lib/audio";
 import { motion } from "motion/react";
 import { useGameStore } from "../store/gameStore";
 import { finalScores } from "../engine/scoring";
+import { playTournament, matchesFor } from "../engine/tournament";
 import { START_BUDGET } from "../engine/franchises";
 import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../engine/rules";
 import { money } from "../components/format";
@@ -20,22 +21,30 @@ export default function Results() {
   const [copied, setCopied] = useState(false);
 
   const scores = useMemo(() => finalScores(auction.franchises, START_BUDGET), [auction]);
+  // The squad you built now has to actually win matches.
+  const tournament = useMemo(
+    () => playTournament(auction.franchises, auction.rngSeed),
+    [auction.franchises, auction.rngSeed],
+  );
+  const [tab, setTab] = useState<"table" | "squads">("table");
   const soundOn = useGameStore((s) => s.soundOn);
   useEffect(() => {
     if (soundOn) fanfare();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const winner = auction.franchises.find((f) => f.id === scores[0].franchiseId)!;
-  const humanRank = scores.findIndex((s) => s.franchiseId === humanId) + 1;
+  const winner = auction.franchises.find((f) => f.id === tournament.championId)!;
+  const humanRank = tournament.table.findIndex((r) => r.franchiseId === humanId) + 1;
+  const humanRow = tournament.table.find((r) => r.franchiseId === humanId);
+  const byId = (id: string) => auction.franchises.find((f) => f.id === id)!;
 
   const share = () => {
     const lines = [
-      `🏏 AuctionRoom — ${winner.name} win the auction!`,
-      ...scores.map((s, i) => {
-        const f = auction.franchises.find((x) => x.id === s.franchiseId)!;
-        return `${i + 1}. ${f.name}${f.id === humanId ? " (me)" : ""} — ${s.total} pts, ${f.squad.length} players, spent ${money(s.spent)}`;
+      `🏏 AuctionRoom — ${winner.name} win the title!`,
+      ...tournament.table.map((r, i) => {
+        const f = byId(r.franchiseId);
+        return `${i + 1}. ${f.name}${f.id === humanId ? " (me)" : ""} — ${r.won}W ${r.lost}L, ${r.points} pts`;
       }),
-      `I finished #${humanRank}. Play at ${location.origin}`,
+      `I finished #${humanRank} of ${tournament.table.length}. Play at ${location.origin}`,
     ];
     navigator.clipboard.writeText(lines.join("\n")).then(() => {
       setCopied(true);
@@ -54,12 +63,15 @@ export default function Results() {
         >
           <p className="text-6xl">🏆</p>
           <h1 className="mt-2 text-4xl font-black">
-            <span style={{ color: winner.color }}>{winner.name}</span> win the auction!
+            <span style={{ color: winner.color }}>{winner.name}</span> win the title!
           </h1>
           <p className="mt-2 text-slate-400">
             {winner.id === humanId
-              ? "That's you. Take a bow, chairman."
-              : `You finished #${humanRank} of ${auction.franchises.length}.`}
+              ? "Your squad went all the way. Take a bow, chairman."
+              : `You finished #${humanRank} of ${tournament.table.length}${humanRow ? ` — ${humanRow.won} wins, ${humanRow.lost} losses` : ""}.`}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Every squad played each other once · {tournament.matches.length} matches
           </p>
           <div className="mt-4 flex justify-center gap-3">
             <button onClick={share}
@@ -73,7 +85,94 @@ export default function Results() {
           </div>
         </motion.div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-8 flex w-fit gap-1 rounded-lg bg-slate-950/70 p-1 backdrop-blur-md">
+          {(["table", "squads"] as const).map((k) => (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              className={`rounded px-4 py-1.5 text-sm font-bold ${tab === k ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:bg-slate-800/70"}`}
+            >
+              {k === "table" ? "Points table" : "Squads"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "table" && (
+          <div className="mx-auto mt-6 max-w-3xl overflow-x-auto rounded-2xl bg-slate-950/75 p-4 backdrop-blur-md">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-800 text-left text-[10px] uppercase tracking-wider text-slate-500">
+                  <th className="py-2">#</th>
+                  <th>Franchise</th>
+                  <th className="text-center">P</th>
+                  <th className="text-center">W</th>
+                  <th className="text-center">L</th>
+                  <th className="text-center">Pts</th>
+                  <th className="text-right">Net runs</th>
+                  <th className="text-right">Squad</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tournament.table.map((r, i) => {
+                  const f = byId(r.franchiseId);
+                  const me = f.id === humanId;
+                  return (
+                    <motion.tr
+                      key={r.franchiseId}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`border-b border-slate-900 ${me ? "bg-amber-500/10" : ""}`}
+                    >
+                      <td className="py-2 font-black text-slate-500">{i + 1}</td>
+                      <td className="font-bold">
+                        <span className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full align-middle" style={{ background: f.color }} />
+                        {f.name}
+                        {i === 0 && " 🏆"}
+                        {me && <span className="ml-1.5 rounded bg-slate-700 px-1 text-[9px] font-black text-amber-300">YOU</span>}
+                      </td>
+                      <td className="text-center text-slate-400">{r.played}</td>
+                      <td className="text-center font-bold text-emerald-400">{r.won}</td>
+                      <td className="text-center text-slate-400">{r.lost}</td>
+                      <td className="text-center font-mono font-black">{r.points}</td>
+                      <td className={`text-right font-mono text-xs ${r.runRate >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {r.runRate > 0 ? "+" : ""}{r.runRate}
+                      </td>
+                      <td className="text-right font-mono text-xs text-slate-400">
+                        {Math.round(r.strength.overall)}
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {humanRow && (
+              <div className="mt-5">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Your matches</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {matchesFor(tournament, humanId).map((m, i) => {
+                    const oppId = m.homeId === humanId ? m.awayId : m.homeId;
+                    const mine = m.homeId === humanId ? m.homeScore : m.awayScore;
+                    const theirs = m.homeId === humanId ? m.awayScore : m.homeScore;
+                    const won = m.winnerId === humanId;
+                    return (
+                      <span
+                        key={i}
+                        className={`rounded px-2 py-1 text-[11px] font-semibold ${won ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"}`}
+                        title={byId(oppId).name}
+                      >
+                        {won ? "W" : "L"} {mine}–{theirs} v {byId(oppId).name.split(" ")[1]}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className={`mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 ${tab === "squads" ? "" : "hidden"}`}>
           {scores.map((s, rank) => {
             const f = auction.franchises.find((x) => x.id === s.franchiseId)!;
             const needs = unfilledNeeds(f.squad);
@@ -117,7 +216,12 @@ export default function Results() {
                         <ul className="text-xs leading-5">
                           {inRole.map((p) => (
                             <li key={p.id} className="flex justify-between gap-2">
-                              <span className="truncate">{p.name}{p.overseas ? " ✈" : ""}</span>
+                              <span className="truncate">
+                                {p.name}{p.overseas ? " ✈" : ""}
+                                {f.retained.includes(p.id) && (
+                                  <span className="ml-1 text-[9px] font-bold text-violet-400">RET</span>
+                                )}
+                              </span>
                               <span className="font-mono text-slate-500">{p.rating}</span>
                             </li>
                           ))}

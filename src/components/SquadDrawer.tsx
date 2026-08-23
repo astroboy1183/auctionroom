@@ -50,6 +50,9 @@ export default function SquadDrawer({ franchise: f, onClose }: { franchise: Fran
                 {inRole.map((p) => (
                   <li key={p.id} className="flex items-center gap-2">
                     <span>{p.name}</span>
+                    {f.retained.includes(p.id) && (
+                      <span className="rounded bg-violet-500/20 px-1 text-[9px] font-bold text-violet-300">RET</span>
+                    )}
                     {p.overseas && <span className="text-[10px]">✈️</span>}
                     <span className="ml-auto font-mono text-xs text-amber-400">{p.rating}</span>
                   </li>

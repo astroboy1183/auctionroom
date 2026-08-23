@@ -1,14 +1,14 @@
 // Pick your franchise, pick a difficulty, start the auction.
 
 import { useState } from "react";
-import { motion } from "motion/react";
-import { makeDefaultFranchises } from "../engine/franchises";
+import { AnimatePresence, motion } from "motion/react";
+
 import { useGameStore, type Difficulty } from "../store/gameStore";
 import { money } from "../components/format";
 import { START_BUDGET } from "../engine/franchises";
 import HallBackdrop from "../components/HallBackdrop";
+import ShortlistPlanner from "./ShortlistPlanner";
 
-const FRANCHISES = makeDefaultFranchises();
 const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
   { id: "easy", label: "Easy", blurb: "bots keep their wallets shut" },
   { id: "normal", label: "Normal", blurb: "a proper bidding war" },
@@ -19,6 +19,9 @@ export default function Lobby() {
   const startGame = useGameStore((s) => s.startGame);
   const [picked, setPicked] = useState("hyd");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  const [planning, setPlanning] = useState(false);
+  const targets = Object.keys(useGameStore((s) => s.shortlist)).length;
+  const FRANCHISES = useGameStore((s) => s.preview);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 text-slate-100">
@@ -32,7 +35,7 @@ export default function Lobby() {
           Auction<span className="text-amber-400">Room</span>
         </h1>
         <p className="mt-2 text-center text-sm text-slate-400">
-          100 cricketers. {money(START_BUDGET)} purse. 7 rival bots. Build the best squad.
+          100 cricketers. {money(START_BUDGET)} purse, less retentions. 7 rival bots.
         </p>
 
         <h2 className="mt-8 text-xs font-black uppercase tracking-widest text-slate-500">Your franchise</h2>
@@ -51,6 +54,12 @@ export default function Lobby() {
               <span className="flex items-center gap-2 font-bold">
                 <span className="h-3 w-3 rounded-full" style={{ background: f.color }} />
                 {f.name}
+              </span>
+              <span className="mt-1 block text-[10px] leading-tight text-slate-400">
+                Retained: {f.squad.map((p) => p.name).join(", ")}
+              </span>
+              <span className="mt-0.5 block text-[10px] font-mono text-slate-500">
+                purse {money(f.budget)}
               </span>
             </button>
           ))}
@@ -74,11 +83,18 @@ export default function Lobby() {
           ))}
         </div>
 
+        <button
+          onClick={() => setPlanning(true)}
+          className="mt-6 w-full rounded-xl border border-slate-700 py-2.5 text-sm font-bold text-slate-300 hover:bg-slate-800/60"
+        >
+          📋 Plan your auction {targets > 0 && <span className="text-amber-400">· {targets} targets</span>}
+        </button>
+
         <motion.button
           whileTap={{ scale: 0.97 }}
           onMouseEnter={() => void import("../scene/Hall")}
           onClick={() => startGame(picked, difficulty)}
-          className="mt-8 w-full rounded-xl bg-amber-500 py-3.5 text-lg font-black text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
+          className="mt-3 w-full rounded-xl bg-amber-500 py-3.5 text-lg font-black text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400"
         >
           Start Auction
         </motion.button>
@@ -86,6 +102,9 @@ export default function Lobby() {
           Fictional franchises · unofficial fan game · players shown with public role/stat info only
         </p>
       </motion.div>
+      <AnimatePresence>
+        {planning && <ShortlistPlanner onClose={() => setPlanning(false)} />}
+      </AnimatePresence>
     </div>
   );
 }

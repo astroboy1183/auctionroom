@@ -6,7 +6,7 @@ import { biddingState, player } from "./helpers";
 import playersJson from "../src/data/players.json";
 import type { Player } from "../src/engine/types";
 
-const allPlayers = playersJson as Player[];
+const allPlayers = (playersJson as Player[]).filter((p) => p.setId !== "RET");
 
 describe("lot lifecycle", () => {
   it("a lot nobody opens on resolves unsold after exactly NO_BID_TICKS", () => {

@@ -3,7 +3,11 @@ import players from "../src/data/players.json";
 import { SETS, SET_SIZES, POOL_SIZE } from "../src/engine/sets";
 import type { Player } from "../src/engine/types";
 
-const pool = players as Player[];
+const all = players as Player[];
+// Retained players (setId "RET") sit outside the auction; the pool assertions
+// below are about the 100 lots that actually come up for bidding.
+const pool = all.filter((p) => p.setId !== "RET");
+const retained = all.filter((p) => p.setId === "RET");
 
 describe("players.json sanity (CLAUDE.md §6/§7)", () => {
   it("has exactly 100 players with unique ids", () => {
@@ -30,13 +34,18 @@ describe("players.json sanity (CLAUDE.md §6/§7)", () => {
   });
 
   it("base prices and ratings are in range", () => {
-    for (const p of pool) {
+    for (const p of all) {
       expect(p.basePrice).toBeGreaterThanOrEqual(30);
       expect(p.basePrice).toBeLessThanOrEqual(200);
       expect(p.rating).toBeGreaterThanOrEqual(60);
       expect(p.rating).toBeLessThanOrEqual(100);
       expect(p.tags.length).toBeGreaterThan(0);
     }
+  });
+
+  it("has 16 retained players (2 per franchise) outside the auction pool", () => {
+    expect(retained).toHaveLength(16);
+    expect(new Set(all.map(p => p.id)).size).toBe(all.length);
   });
 
   it("every setId maps to a defined set, with the declared size", () => {

@@ -6,6 +6,7 @@ import type { AuctionState, Franchise, Player } from "./types";
 import { applyEvent } from "./auction";
 import { canBid } from "./rules";
 import { assignFormerPlayers } from "./rtm";
+import { applyRetentions, auctionPool } from "./retentions";
 import { makeDefaultFranchises } from "./franchises";
 import { SETS } from "./sets";
 import { nextFloat, seedRng, type Rng } from "./rng";
@@ -45,8 +46,10 @@ const MAX_EVENTS = 300_000;
  */
 export function simulateRandomAuction(players: Player[], seed: number): SimResult {
   let rng: Rng = seedRng(seed ^ 0x5eed);
-  const franchises = assignFormerPlayers(makeDefaultFranchises(), players, seed + 1);
-  let state = applyEvent(createInitialState(players, franchises), { type: "START", seed });
+  const pool = auctionPool(players);
+  let franchises = applyRetentions(makeDefaultFranchises(), players, seed + 3);
+  franchises = assignFormerPlayers(franchises, pool, seed + 1);
+  let state = applyEvent(createInitialState(pool, franchises), { type: "START", seed });
   const log: string[] = [];
   const name = (id: string | null) => franchises.find((f) => f.id === id)?.name ?? "?";
   let events = 1;
@@ -116,14 +119,16 @@ import { shuffle } from "./rng";
  */
 export function simulateBotAuction(players: Player[], seed: number, difficulty = 1): SimResult {
   let rng: Rng = seedRng(seed ^ 0xb07);
-  let franchises = assignFormerPlayers(makeDefaultFranchises(), players, seed + 1);
+  const pool = auctionPool(players);
+  let franchises = applyRetentions(makeDefaultFranchises(), players, seed + 3);
+  franchises = assignFormerPlayers(franchises, pool, seed + 1);
   // Every seat botted: the "human" franchise gets its own balanced personality.
   franchises = attachBotPersonalities(
     franchises.map((f) => ({ ...f, isHuman: false })),
     difficulty,
     seed + 2,
   );
-  let state = applyEvent(createInitialState(players, franchises), { type: "START", seed });
+  let state = applyEvent(createInitialState(pool, franchises), { type: "START", seed });
   const log: string[] = [];
   const name = (id: string | null) => franchises.find((f) => f.id === id)?.name ?? "?";
   let events = 1;

@@ -1346,5 +1346,219 @@
     ],
     "overseas": false,
     "setId": "S12"
+  },
+  {
+    "id": "ms-dhoni",
+    "name": "MS Dhoni",
+    "role": "WK",
+    "basePrice": 200,
+    "rating": 88,
+    "tags": [
+      "finisher",
+      "captain",
+      "legend"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "sanju-nair",
+    "name": "Sanju Nair",
+    "role": "BAT",
+    "basePrice": 200,
+    "rating": 89,
+    "tags": [
+      "anchor",
+      "elegant"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "bhanuka-rajapaksa",
+    "name": "Bhanuka Rajapaksa",
+    "role": "BAT",
+    "basePrice": 150,
+    "rating": 84,
+    "tags": [
+      "opener",
+      "power-hitter",
+      "left-hand"
+    ],
+    "overseas": true,
+    "setId": "RET"
+  },
+  {
+    "id": "marcus-stoinis",
+    "name": "Marcus Stoinis",
+    "role": "AR",
+    "basePrice": 150,
+    "rating": 86,
+    "tags": [
+      "pace",
+      "power-hitter"
+    ],
+    "overseas": true,
+    "setId": "RET"
+  },
+  {
+    "id": "rahul-tripathi",
+    "name": "Rahul Tripathi",
+    "role": "BAT",
+    "basePrice": 150,
+    "rating": 84,
+    "tags": [
+      "opener",
+      "spin-hitter"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "lockie-ferguson",
+    "name": "Lockie Ferguson",
+    "role": "BOWL",
+    "basePrice": 150,
+    "rating": 86,
+    "tags": [
+      "pace",
+      "express",
+      "death-bowler"
+    ],
+    "overseas": true,
+    "setId": "RET"
+  },
+  {
+    "id": "dinesh-karthik",
+    "name": "Dinesh Karthik",
+    "role": "WK",
+    "basePrice": 100,
+    "rating": 82,
+    "tags": [
+      "finisher",
+      "six-hitter"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "manish-pandey",
+    "name": "Manish Pandey",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 80,
+    "tags": [
+      "anchor",
+      "fielding"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "mustafizur-rahman",
+    "name": "Mustafizur Rahman",
+    "role": "BOWL",
+    "basePrice": 150,
+    "rating": 85,
+    "tags": [
+      "pace",
+      "cutter",
+      "death-bowler"
+    ],
+    "overseas": true,
+    "setId": "RET"
+  },
+  {
+    "id": "rovman-powell",
+    "name": "Rovman Powell",
+    "role": "BAT",
+    "basePrice": 100,
+    "rating": 82,
+    "tags": [
+      "finisher",
+      "six-hitter"
+    ],
+    "overseas": true,
+    "setId": "RET"
+  },
+  {
+    "id": "kane-williamson",
+    "name": "Kane Williamson",
+    "role": "BAT",
+    "basePrice": 150,
+    "rating": 85,
+    "tags": [
+      "anchor",
+      "captain",
+      "technician"
+    ],
+    "overseas": true,
+    "setId": "RET"
+  },
+  {
+    "id": "mohsin-khan",
+    "name": "Mohsin Khan",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 82,
+    "tags": [
+      "pace",
+      "left-arm",
+      "yorker"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "simarjeet-singh",
+    "name": "Simarjeet Singh",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 79,
+    "tags": [
+      "pace",
+      "seam"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "anuj-rawat",
+    "name": "Anuj Rawat",
+    "role": "WK",
+    "basePrice": 100,
+    "rating": 78,
+    "tags": [
+      "opener",
+      "left-hand"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "vijay-shankar",
+    "name": "Vijay Shankar",
+    "role": "AR",
+    "basePrice": 100,
+    "rating": 79,
+    "tags": [
+      "pace",
+      "anchor"
+    ],
+    "overseas": false,
+    "setId": "RET"
+  },
+  {
+    "id": "kartik-tyagi",
+    "name": "Kartik Tyagi",
+    "role": "BOWL",
+    "basePrice": 100,
+    "rating": 78,
+    "tags": [
+      "pace",
+      "new-ball"
+    ],
+    "overseas": false,
+    "setId": "RET"
   }
 ]

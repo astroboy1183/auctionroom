@@ -3,7 +3,7 @@
 import type { Franchise } from "./types";
 import { RTM_CARDS_START } from "./rtm";
 
-export const START_BUDGET = 12000; // ₹120 Cr in lakhs
+export const START_BUDGET = 12000; // ₹120 Cr in lakhs, before retentions
 
 function franchise(id: string, name: string, color: string, isHuman: boolean): Franchise {
   return {
@@ -15,6 +15,7 @@ function franchise(id: string, name: string, color: string, isHuman: boolean): F
     isHuman,
     rtmCards: RTM_CARDS_START,
     formerPlayerIds: [],
+    retained: [],
   };
 }
 

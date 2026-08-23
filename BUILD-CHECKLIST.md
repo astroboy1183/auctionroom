@@ -117,6 +117,9 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 - [x] Floor carpet and tightened bench arc; rail widened
 - [x] Lobby and results render inside the hall, idle-mounted after first paint
 - [x] Fix hardcoded "of 4" / "12/15" caps left over from the 4-team era
+- [x] Pre-auction shortlist with ceilings, target strip, over-plan warning (D-024)
+- [x] Retentions: 2 per franchise from outside the pool, purse ladder, lobby preview (D-025)
+- [x] Post-auction round-robin tournament decides the title (D-026)
 - [ ] **GATE 🧑:** play a full 8-team auction in the 3D hall with sound on
 
 ## Phase 6 (v2) — Multiplayer

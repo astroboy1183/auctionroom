@@ -16,6 +16,8 @@ interface Props {
   nextAmount: number;
   humanPassed: boolean;
   skipping: boolean;
+  /** Your pre-auction ceiling for this player, if you set one. */
+  ceiling?: number;
   onBid: () => void;
   onPass: () => void;
   onSkip: () => void;
@@ -23,8 +25,9 @@ interface Props {
 
 export default function BidHud({
   auction, humanId, lotLen, canBidNow, bidBlockedReason, nextAmount, humanPassed, skipping,
-  onBid, onPass, onSkip,
+  ceiling, onBid, onPass, onSkip,
 }: Props) {
+  const overPlan = ceiling !== undefined && nextAmount > ceiling;
   const leader = auction.franchises.find((f) => f.id === auction.currentBidderId);
   const leading = auction.currentBidderId === humanId;
 
@@ -56,7 +59,9 @@ export default function BidHud({
           whileTap={{ scale: 0.96 }}
           disabled={!canBidNow}
           onClick={onBid}
-          className="rounded-lg bg-amber-500 px-4 py-3 text-base font-black text-slate-950 shadow-lg shadow-amber-500/25 enabled:hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-slate-800/80 disabled:text-slate-500"
+          className={`rounded-lg px-4 py-3 text-base font-black text-slate-950 shadow-lg enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-800/80 disabled:text-slate-500 ${
+            overPlan ? "bg-red-500 shadow-red-500/25" : "bg-amber-500 shadow-amber-500/25"
+          }`}
         >
           {leading ? "You lead" : canBidNow ? `BID ${money(nextAmount)}` : (bidBlockedReason ?? "…")}
         </motion.button>
@@ -81,6 +86,11 @@ export default function BidHud({
       {humanPassed && !skipping && (
         <p className="mt-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           You're out of this lot
+        </p>
+      )}
+      {!humanPassed && overPlan && !leading && (
+        <p className="mt-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-red-400">
+          Over your {money(ceiling!)} plan
         </p>
       )}
     </div>

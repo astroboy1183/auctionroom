@@ -39,6 +39,7 @@ export interface Franchise {
   botPersonality?: BotPersonality;
   rtmCards: number;         // Right to Match cards remaining (start: 2)
   formerPlayerIds: string[]; // players this franchise may RTM
+  retained: string[];        // ids kept pre-auction (never enter the pool)
 }
 
 export interface Bid {

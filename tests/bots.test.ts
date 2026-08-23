@@ -7,7 +7,7 @@ import { biddingState, player } from "./helpers";
 import playersJson from "../src/data/players.json";
 import type { Player } from "../src/engine/types";
 
-const allPlayers = playersJson as Player[];
+const allPlayers = (playersJson as Player[]).filter((p) => p.setId !== "RET");
 
 function bottedFranchises(difficulty = 1, seed = 7) {
   return attachBotPersonalities(

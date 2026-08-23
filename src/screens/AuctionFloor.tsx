@@ -14,6 +14,7 @@ import TeamRail from "../components/TeamRail";
 import LowerThird from "../components/LowerThird";
 import BidHud from "../components/BidHud";
 import BidTicker from "../components/BidTicker";
+import TargetStrip from "../components/TargetStrip";
 import RtmModal from "../components/RtmModal";
 import SoldBanner from "../components/SoldBanner";
 import SquadDrawer from "../components/SquadDrawer";
@@ -35,6 +36,7 @@ export default function AuctionFloor() {
   const setSkipping = useGameStore((s) => s.setSkipping);
   const outbid = useGameStore((s) => s.outbid);
   const clearOutbid = useGameStore((s) => s.clearOutbid);
+  const shortlist = useGameStore((s) => s.shortlist);
   // The alert clears itself; there is no tick during rtm/sold to re-render it.
   useEffect(() => {
     if (!outbid) return;
@@ -138,10 +140,13 @@ export default function AuctionFloor() {
         </button>
       </div>
 
-      {/* ---- right: recent bids ---- */}
-      <div className="pointer-events-none fixed right-3 top-16 z-20 hidden w-[238px] rounded-lg bg-slate-950/55 p-2.5 backdrop-blur-md lg:block">
-        <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-500">Bidding</p>
-        <BidTicker auction={auction} />
+      {/* ---- right: targets + recent bids ---- */}
+      <div className="pointer-events-none fixed right-3 top-16 z-20 hidden w-[238px] space-y-2 lg:block">
+        <TargetStrip auction={auction} shortlist={shortlist} budget={human.budget} />
+        <div className="rounded-lg bg-slate-950/55 p-2.5 backdrop-blur-md">
+          <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-slate-500">Bidding</p>
+          <BidTicker auction={auction} />
+        </div>
       </div>
 
       {/* ---- outbid alert ---- */}
@@ -163,7 +168,7 @@ export default function AuctionFloor() {
       {/* ---- bottom: lower-third + money HUD ---- */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex flex-col items-stretch gap-2 px-3 pb-3 sm:flex-row sm:items-end sm:justify-between sm:px-5 sm:pb-4">
         <div className="w-full sm:max-w-md">
-          <LowerThird player={player} />
+          <LowerThird player={player} ceiling={shortlist[player.id]} />
         </div>
         <BidHud
           auction={auction}
@@ -174,6 +179,7 @@ export default function AuctionFloor() {
           nextAmount={nextAmount}
           humanPassed={auction.passed.includes(humanId)}
           skipping={skipping}
+          ceiling={shortlist[player.id]}
           onBid={() => dispatch({ type: "BID", franchiseId: humanId })}
           onPass={() => { whoosh(); dispatch({ type: "PASS", franchiseId: humanId }); }}
           onSkip={() => {

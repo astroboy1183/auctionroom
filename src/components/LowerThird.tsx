@@ -13,7 +13,7 @@ const ROLE_COLOR: Record<Role, string> = {
   BAT: "#f59e0b", BOWL: "#38bdf8", AR: "#34d399", WK: "#e879f9",
 };
 
-export default function LowerThird({ player }: { player: Player }) {
+export default function LowerThird({ player, ceiling }: { player: Player; ceiling?: number }) {
   return (
     <motion.div
       key={player.id}
@@ -25,6 +25,11 @@ export default function LowerThird({ player }: { player: Player }) {
     >
       <div className="px-3.5 py-2.5">
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+          {ceiling !== undefined && (
+            <span className="rounded bg-amber-500 px-1.5 py-0.5 text-slate-950">
+              ★ Target · {money(ceiling)}
+            </span>
+          )}
           <span style={{ color: ROLE_COLOR[player.role] }}>{ROLE_LABEL[player.role]}</span>
           {player.overseas && <span className="text-indigo-300">✈ Overseas</span>}
           <Stars rating={player.rating} />

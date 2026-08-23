@@ -5,6 +5,45 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-026 — Post-auction tournament decides the winner
+**v1, 2026-08-21.** The results screen used to declare a winner from Σ ratings
+plus balance bonuses — a number with no meaning attached. Now every squad plays
+a single round-robin (8 teams → 28 matches) and the **points table** decides
+the title.
+**Model:** batting strength = mean of the best six BAT/WK/AR ratings, bowling =
+best five BOWL/AR — all-rounders count for both, which is what makes them worth
+overpaying for. A score is `120 + (batting − opposing bowling) × 2.6 ± 23`, so
+the better squad usually wins but not always. Structurally illegal squads take
+a strength penalty per missing mandatory slot and per player short of eleven.
+**Tested:** the strongest squad takes the title in roughly half of 40 seeds —
+enough that squad quality dominates, not so much that variance is gone.
+`scoring.ts` is kept for the Squads tab; the table is the headline.
+
+## D-025 — Retentions come from outside the auction pool
+**v1, 2026-08-21.** Each franchise starts with 2 retained players and a purse
+cut by the ladder (₹14 Cr + ₹10 Cr → ₹96 Cr left).
+**The key call:** retained players are a separate 16-strong roster with
+`setId: "RET"`, never entering the auction. Retaining *from* the 100 lots would
+have left 84 players for 80 slots — a surplus of four, which destroys the
+"someone cheaper is coming" dynamic that makes passing viable (D-009).
+Keeping them outside means 100 lots chase 80 open slots instead.
+**Measured:** mandatory minimums met went 90/96 → **96/96**, unsold per auction
+7 → ~17 (a real surplus again), average price ₹10 Cr → ₹9.2 Cr.
+**Also:** retentions are dealt from a per-page-load `lobbySeed` so the lobby can
+*show* each franchise's retained players and purse before you pick — franchise
+choice is now a real decision, not cosmetic.
+
+## D-024 — Pre-auction shortlist with per-player ceilings
+**v1, 2026-08-21.** A planner opened from the lobby lets you flag targets from
+all 100 lots and commit a maximum bid to each. During the auction: a ★ TARGET
+badge on the lower-third, a "your targets" strip showing how many lots away
+each one is and whether you can still afford your ceiling, and the BID button
+turning **red** with "over your plan" once the next increment breaks it.
+**Why ceilings rather than just favourites:** the plan only creates tension if
+breaking it is visible. A list of names is a bookmark; a number you have to
+knowingly exceed is a decision.
+The shortlist is UI/store state only — `engine/` is untouched.
+
 ## D-023 — Bug sweep after the polish pass
 **v1, 2026-08-21.** Four defects found by driving the built app headlessly
 rather than by reading the diff.
