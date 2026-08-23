@@ -6,6 +6,7 @@
 
 import type { Franchise, Player, Role } from "./types";
 import { nextFloat, type Rng } from "./rng";
+import { FIELD_SETTING, dismissalText, placeShot, type Shot } from "./field";
 
 export const OVERS = 20;
 export const BALLS_PER_OVER = 6;
@@ -157,6 +158,8 @@ export interface BattingCard {
   fours: number;
   sixes: number;
   out: boolean;
+  /** How they got out, in scorecard notation. */
+  how: string | null;
 }
 
 export interface BowlingCard {
@@ -177,6 +180,10 @@ export interface BallEvent {
   outcome: Outcome;
   runsAfter: number;
   wicketsAfter: number;
+  /** Where the ball actually went — what the field view animates. */
+  shot: Shot;
+  /** "c Cover b Bumrah" when this ball took a wicket. */
+  dismissal: string | null;
 }
 
 export interface Innings {
@@ -237,7 +244,10 @@ export function playInnings(
   const plan = overSchedule(attack);
 
   const bat = new Map<string, BattingCard>(
-    order.map((p) => [p.id, { playerId: p.id, name: p.name, runs: 0, balls: 0, fours: 0, sixes: 0, out: false }]),
+    order.map((p) => [
+      p.id,
+      { playerId: p.id, name: p.name, runs: 0, balls: 0, fours: 0, sixes: 0, out: false, how: null },
+    ]),
   );
   const bowl = new Map<string, BowlingCard>(
     attack.map((p) => [p.id, { playerId: p.id, name: p.name, balls: 0, runs: 0, wickets: 0 }]),
@@ -274,16 +284,26 @@ export function playInnings(
         weights({ batter: striker, bowler, phase: phaseOf(over), aggression }),
         roll(),
       );
+      let shot: Shot;
+      [shot, r] = placeShot(outcome, striker, r);
       balls++;
       const bc = bat.get(striker.id)!;
       const bw = bowl.get(bowler.id)!;
       bc.balls++;
       bw.balls++;
 
+      let dismissal: string | null = null;
       if (outcome === "W") {
         wickets++;
         bc.out = true;
-        bw.wickets++;
+        const fielderName =
+          shot.fielder !== null
+            ? FIELD_SETTING[shot.fielder].name
+            : undefined;
+        dismissal = dismissalText(shot, bowler.name, fielderName);
+        bc.how = dismissal;
+        // A run out is not credited to the bowler.
+        if (shot.dismissal !== "run out") bw.wickets++;
         if (nextBatter < order.length) {
           strikerIdx = nextBatter++;
         } else {
@@ -307,6 +327,8 @@ export function playInnings(
         outcome,
         runsAfter: runs,
         wicketsAfter: Math.min(wickets, ALL_OUT),
+        shot,
+        dismissal,
       });
     }
     if (target !== undefined && runs >= target) { chasedDown = true; break; }

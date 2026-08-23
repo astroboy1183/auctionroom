@@ -105,8 +105,11 @@ describe("an innings", () => {
     expect(bowlBalls).toBe(inn.balls);
     const bowlRuns = inn.bowling.reduce((n, c) => n + c.runs, 0);
     expect(bowlRuns).toBe(inn.runs);
-    const dismissals = inn.bowling.reduce((n, c) => n + c.wickets, 0);
-    expect(dismissals).toBe(inn.wickets);
+    // Run-outs are not credited to the bowler, so bowlers' wickets plus
+    // run-outs must equal the innings total — as on a real scorecard.
+    const bowlerWickets = inn.bowling.reduce((n, c) => n + c.wickets, 0);
+    const runOuts = inn.timeline.filter((b) => b.shot.dismissal === "run out").length;
+    expect(bowlerWickets + runOuts).toBe(inn.wickets);
   });
 
   it("produces believable T20 totals", () => {
@@ -115,6 +118,27 @@ describe("an innings", () => {
     const avg = totals.reduce((a, b) => a + b, 0) / totals.length;
     expect(avg).toBeGreaterThan(110);
     expect(avg).toBeLessThan(230);
+  });
+
+  it("every ball records where it went, and wickets say how", () => {
+    const [inn] = playInnings(A, B, seedRng(77));
+    for (const b of inn.timeline) {
+      expect(b.shot).toBeDefined();
+      expect(Number.isFinite(b.shot.angle)).toBe(true);
+      expect(b.shot.distance).toBeGreaterThanOrEqual(0);
+      if (b.outcome === "W") {
+        expect(b.dismissal).toBeTruthy();
+        expect(b.shot.dismissal).toBeTruthy();
+      } else {
+        expect(b.dismissal).toBeNull();
+      }
+      // Sixes clear the rope; nothing else does.
+      if (b.outcome === 6) expect(b.shot.distance).toBeGreaterThan(68);
+    }
+    // Dismissed batters carry scorecard notation.
+    for (const c of inn.batting) {
+      if (c.out) expect(c.how).toMatch(/b |run out|c |lbw|st /);
+    }
   });
 
   it("a chase stops the moment the target is passed", () => {

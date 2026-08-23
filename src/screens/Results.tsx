@@ -10,6 +10,7 @@ import { analyse } from "../engine/analytics";
 import { playerOfTheMatch } from "../engine/match";
 import Scorecard from "../components/Scorecard";
 import SeasonEnd from "./SeasonEnd";
+import WatchMatch from "./WatchMatch";
 import type { MatchResult } from "../engine/tournament";
 import { START_BUDGET } from "../engine/franchises";
 import { unfilledNeeds, overseasCount, SQUAD_MAX, OVERSEAS_MAX } from "../engine/rules";
@@ -36,6 +37,7 @@ export default function Results() {
   const startGame = useGameStore((s) => s.startGame);
   const [seedCopied, setSeedCopied] = useState(false);
   const [openMatch, setOpenMatch] = useState<MatchResult | null>(null);
+  const [watchMatch, setWatchMatch] = useState<MatchResult | null>(null);
   const career = useGameStore((s) => s.career);
   const [seasonEnd, setSeasonEnd] = useState(false);
   const soundOn = useGameStore((s) => s.soundOn);
@@ -376,6 +378,16 @@ export default function Results() {
       </div>
 
       <AnimatePresence>
+        {watchMatch && (
+          <WatchMatch
+            match={watchMatch}
+            franchises={auction.franchises}
+            onClose={() => setWatchMatch(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {seasonEnd && career && <SeasonEnd onClose={() => setSeasonEnd(false)} />}
       </AnimatePresence>
 
@@ -385,6 +397,7 @@ export default function Results() {
             match={openMatch}
             franchises={auction.franchises}
             onClose={() => setOpenMatch(null)}
+            onWatch={() => { setWatchMatch(openMatch); setOpenMatch(null); }}
           />
         )}
       </AnimatePresence>

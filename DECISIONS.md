@@ -36,6 +36,46 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-043 — Eleven players on a field: the match is now watchable
+**Owner's request, 2026-08-21.** "Can we have 11 players playing cricket on
+field?" — yes, and the blocker was not rendering.
+
+**The engine knew the outcome of every ball but not what it looked like.** It
+recorded "4", never *driven through cover*. You cannot animate what was never
+simulated, so `field.ts` came first:
+
+- **Real ground geometry.** 68m boundary, 20.12m pitch, and a standard T20
+  field of eleven — keeper, slip, point, cover, mid-off, mid-on, midwicket,
+  square leg, fine leg, third man, long-on — as (angle, distance) from the
+  striker. Angle 0 is straight down the ground past the bowler, +90 square on
+  the off side.
+- **Shot placement.** Every ball now carries direction, distance, whether it
+  was aerial, and which fielder dealt with it. Placement is weighted by the
+  batter's tags: classical players (opener, elegant) score square of the
+  wicket on the off side, power players (six-hitter, finisher) go leg side and
+  straight.
+- **Dismissal types** — bowled, caught, LBW, run out, stumped — which also
+  gave the scorecard proper notation (`c Cover b Bumrah`) and, correctly, stop
+  crediting run-outs to the bowler.
+
+**A geometry bug the tests caught:** my first angle convention was inverted,
+which put the wicketkeeper *in front of* the striker and long-on outside the
+rope. There are now assertions that the keeper stands behind the striker,
+point and square leg mirror each other, and long-on is past the bowler.
+
+**`Ground.tsx`** renders it with the same primitives-only approach as the
+auction hall: outfield, boundary rope, inner ring, pitch, stumps, eleven
+fielders who break toward the ball, a bowler who runs in and follows through,
+a striker who plays the shot, non-striker, umpire, banked stands and crowd.
+**Camera framing mattered more than detail** — a ground-level camera behind the
+bowler looks like broadcast but leaves nine fielders as specks at 68m, so the
+default sits high behind the arm, drops for the delivery and lifts to follow a
+big shot.
+
+`WatchMatch` plays any match back with pause, 1×/2×/4× speed, a jump to the
+final overs, a live scoreboard and the chase equation. Reached from the
+"Watch on the ground" button on any scorecard.
+
 ## D-042 — Pacing reverted: every bid restores the full clock
 **Owner's decision, 2026-08-21.** Both D-040 pacing changes are reverted. Every
 bid restores the full `LOT_SECONDS` for every bidder, and the driver and DO

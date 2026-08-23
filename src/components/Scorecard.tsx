@@ -13,6 +13,7 @@ interface Props {
   match: MatchResult;
   franchises: Franchise[];
   onClose: () => void;
+  onWatch: () => void;
 }
 
 const PLAYBACK_MS = 420;
@@ -54,6 +55,7 @@ function InningsCard({ inn, name, color }: { inn: Innings; name: string; color: 
               <td className="py-1 pr-2">
                 <span className="truncate">{c.name}</span>
                 {!c.out && <span className="ml-1 text-emerald-400">*</span>}
+                {c.how && <span className="block text-[10px] italic text-slate-500">{c.how}</span>}
               </td>
               <td className="text-right font-mono font-bold">{c.runs}</td>
               <td className="text-right font-mono text-slate-400">{c.balls}</td>
@@ -162,7 +164,7 @@ function FinalOvers({ inn, target }: { inn: Innings; target: number }) {
   );
 }
 
-export default function Scorecard({ match, franchises, onClose }: Props) {
+export default function Scorecard({ match, franchises, onClose, onWatch }: Props) {
   const byId = (id: string) => franchises.find((f) => f.id === id)!;
   const home = byId(match.homeId);
   const away = byId(match.awayId);
@@ -196,7 +198,13 @@ export default function Scorecard({ match, franchises, onClose }: Props) {
               </p>
             )}
           </div>
-          <button onClick={onClose} className="ml-auto rounded bg-slate-800 px-2 py-1 text-sm hover:bg-slate-700">
+          <button
+            onClick={onWatch}
+            className="ml-auto rounded-lg bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950 hover:bg-emerald-400"
+          >
+            ▶ Watch on the ground
+          </button>
+          <button onClick={onClose} className="ml-2 rounded bg-slate-800 px-2 py-1 text-sm hover:bg-slate-700">
             ✕
           </button>
         </div>
