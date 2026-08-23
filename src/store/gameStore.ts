@@ -35,6 +35,9 @@ interface GameStore {
   lobbySeed: number;
   /** Franchises with retentions applied — what the lobby previews. */
   preview: Franchise[];
+  /** Set while playing an online room; null in solo play. */
+  roomCode: string | null;
+  playerName: string;
   dispatch: (event: AuctionEvent) => void;
   startGame: (humanId: string, difficulty: Difficulty) => void;
   toggleSound: () => void;
@@ -45,6 +48,7 @@ interface GameStore {
   setTarget: (playerId: string, maxBid: number) => void;
   removeTarget: (playerId: string) => void;
   clearShortlist: () => void;
+  setRoom: (code: string | null, name?: string) => void;
   reset: () => void;
 }
 
@@ -64,6 +68,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   outbid: null,
   shortlist: {},
   lobbySeed: LOBBY_SEED,
+  roomCode: null,
+  playerName: "",
   preview: applyRetentions(makeDefaultFranchises(), allPlayers, LOBBY_SEED + 3),
   dispatch: (event) => set((s) => ({ auction: applyEvent(s.auction, event) })),
   startGame: (humanId, difficulty) =>
@@ -94,6 +100,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { shortlist: next };
     }),
   clearShortlist: () => set({ shortlist: {} }),
+  setRoom: (code, name) => set((s) => ({ roomCode: code, playerName: name ?? s.playerName })),
   // Must clear transient per-lot UI state too, or "Play again" can start the
   // next auction still in fast-forward.
   reset: () => set({ auction: fresh(), skipping: false, outbid: null }),

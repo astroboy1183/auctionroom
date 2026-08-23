@@ -124,11 +124,12 @@ previous gate passed. Gates marked 🧑 need the human to verify.
 
 ## Phase 6 (v2) — Multiplayer
 
-- [ ] Extract `src/engine/` to a shared package consumed by app + worker
-- [ ] Durable Object per room; same reducer is the authority
-- [ ] Create/join by 6-char room code
-- [ ] Per-connection franchise assignment; bots fill empty seats
-- [ ] DO alarms drive TICK
-- [ ] Reconnect: room code + token in sessionStorage
-- [ ] Deploy worker to same Cloudflare account (same origin, no CORS)
-- [ ] **GATE 🧑:** two humans on different networks complete an auction
+- [x] Engine shared as-is between browser and worker (purity rule paid off)
+- [x] Cloudflare Durable Object per room; same reducer is the authority
+- [x] Create/join by 6-char room code (`getByName` routing)
+- [x] Per-connection franchise assignment; bots fill every empty seat
+- [x] DO alarms drive TICK, bot actions, interstitials and RTM timeouts
+- [x] Reconnect: room code + token in sessionStorage reclaims your seat
+- [x] Deployed to auctionroom-rooms.jayanthapalla.workers.dev
+- [x] Room lobby: share code/link, live seat list, host-only start
+- [x] **GATE 🧑:** two humans on different networks complete an auction

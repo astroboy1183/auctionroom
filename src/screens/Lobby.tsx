@@ -8,6 +8,7 @@ import { money } from "../components/format";
 import { START_BUDGET } from "../engine/franchises";
 import HallBackdrop from "../components/HallBackdrop";
 import ShortlistPlanner from "./ShortlistPlanner";
+import { createRoom } from "../hooks/useRoom";
 
 const DIFFICULTIES: { id: Difficulty; label: string; blurb: string }[] = [
   { id: "easy", label: "Easy", blurb: "bots keep their wallets shut" },
@@ -20,6 +21,25 @@ export default function Lobby() {
   const [picked, setPicked] = useState("hyd");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [planning, setPlanning] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const setRoom = useGameStore((s) => s.setRoom);
+
+  const enterRoom = (code: string) => {
+    const name = playerName.trim() || "Player";
+    sessionStorage.setItem("auctionroom:name", name);
+    setRoom(code.toUpperCase(), name);
+  };
+
+  const host = async () => {
+    setBusy(true);
+    try {
+      enterRoom(await createRoom());
+    } catch {
+      setBusy(false);
+    }
+  };
   const targets = Object.keys(useGameStore((s) => s.shortlist)).length;
   const FRANCHISES = useGameStore((s) => s.preview);
 
@@ -83,9 +103,44 @@ export default function Lobby() {
           ))}
         </div>
 
+        <div className="mt-6 rounded-xl border border-slate-800 p-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+            Play with friends
+          </p>
+          <input
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            placeholder="Your name"
+            maxLength={20}
+            className="mt-2 w-full rounded-lg bg-slate-900 px-3 py-2 text-sm outline-none ring-slate-700 focus:ring-1"
+          />
+          <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+            <input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+              placeholder="Room code"
+              className="w-full rounded-lg bg-slate-900 px-3 py-2 font-mono text-sm tracking-widest outline-none ring-slate-700 focus:ring-1"
+            />
+            <button
+              disabled={joinCode.length !== 6}
+              onClick={() => enterRoom(joinCode)}
+              className="rounded-lg bg-slate-700 px-4 text-sm font-bold enabled:hover:bg-slate-600 disabled:opacity-40"
+            >
+              Join
+            </button>
+          </div>
+          <button
+            onClick={host}
+            disabled={busy}
+            className="mt-2 w-full rounded-lg border border-slate-700 py-2 text-sm font-bold text-slate-300 hover:bg-slate-800/60 disabled:opacity-50"
+          >
+            {busy ? "Creating…" : "Create a room"}
+          </button>
+        </div>
+
         <button
           onClick={() => setPlanning(true)}
-          className="mt-6 w-full rounded-xl border border-slate-700 py-2.5 text-sm font-bold text-slate-300 hover:bg-slate-800/60"
+          className="mt-3 w-full rounded-xl border border-slate-700 py-2.5 text-sm font-bold text-slate-300 hover:bg-slate-800/60"
         >
           📋 Plan your auction {targets > 0 && <span className="text-amber-400">· {targets} targets</span>}
         </button>

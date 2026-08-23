@@ -327,11 +327,12 @@ Still a static deploy — no backend.
 ✅ Gate: full auction in 3D on desktop AND a mid-range phone at playable
 frame rate; 2D fallback still works.
 
-**Phase 6 (v2) — Multiplayer.** Extract engine to a shared package. Cloudflare
-Durable Object per room: create/join by 6-char code, server-authoritative state
-via the same reducer, per-connection franchise assignment, bots fill empty
-seats, DO alarms drive the timer, reconnect via room code + token in
-sessionStorage.
+**Phase 6 (v2) — Multiplayer.** ✅ Shipped. Cloudflare Durable Object per room
+(`worker/`), create/join by 6-char code, server-authoritative state via the
+same reducer the browser runs, per-connection franchise assignment, bots fill
+every empty seat, DO alarms drive the clock, reconnect via room code + token in
+sessionStorage. Rooms worker deployed separately from the Pages site;
+WebSockets need no CORS, so the two-origin split costs nothing.
 ✅ Gate: two humans on different networks complete an auction.
 
 ## 11. Repo layout
@@ -350,7 +351,8 @@ auctionroom/
     screens/  components/  hooks/  assets/
     scene/             ← v1 only: r3f components, 3D-side of the state bridge
     assets/models/     ← v1 only: GLB (Draco-compressed)
-  worker/              ← v2 only (Durable Object)
+  worker/              ← v2: rooms Durable Object + wrangler config
+    src/index.ts  src/protocol.ts  wrangler.jsonc
   tests/
 ```
 

@@ -1,0 +1,96 @@
+// Multiplayer waiting room: share the code, watch people take seats, and the
+// host starts when everyone's in. Empty seats stay bots, so a room of two can
+// still run a full eight-franchise auction.
+
+import { motion } from "motion/react";
+import type { Seat } from "../../worker/src/protocol";
+import type { AuctionState } from "../engine/types";
+import { money } from "../components/format";
+
+interface Props {
+  roomCode: string;
+  seats: Seat[];
+  auction: AuctionState | null;
+  franchiseId: string | null;
+  isHost: boolean;
+  onStart: () => void;
+  onLeave: () => void;
+}
+
+export default function RoomLobby({
+  roomCode, seats, auction, franchiseId, isHost, onStart, onLeave,
+}: Props) {
+  const humans = seats.filter((s) => s.isHuman).length;
+  const shareUrl = `${location.origin}/?room=${roomCode}`;
+
+  return (
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-10 text-slate-100">
+      <div className="fixed inset-0 -z-20 bg-gradient-to-b from-slate-900 via-slate-950 to-black" />
+      <motion.div
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-lg rounded-2xl bg-slate-950/70 p-6 backdrop-blur-md"
+      >
+        <h1 className="text-center text-3xl font-black">
+          Auction<span className="text-amber-400">Room</span>
+        </h1>
+
+        <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center">
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Room code</p>
+          <p className="font-mono text-4xl font-black tracking-[0.35em] text-amber-300">{roomCode}</p>
+          <button
+            onClick={() => void navigator.clipboard.writeText(shareUrl)}
+            className="mt-2 rounded bg-slate-800 px-3 py-1 text-xs font-bold hover:bg-slate-700"
+          >
+            Copy invite link
+          </button>
+        </div>
+
+        <p className="mt-5 text-xs font-black uppercase tracking-widest text-slate-500">
+          Seats · {humans} human{humans === 1 ? "" : "s"}, {seats.length - humans} bots
+        </p>
+        <ul className="mt-2 space-y-1.5">
+          {seats.map((s) => {
+            const f = auction?.franchises.find((x) => x.id === s.franchiseId);
+            const mine = s.franchiseId === franchiseId;
+            return (
+              <li
+                key={s.franchiseId}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${mine ? "bg-amber-500/10 ring-1 ring-amber-500/40" : "bg-slate-900/60"}`}
+              >
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: f?.color ?? "#64748b" }} />
+                <span className="font-bold">{f?.name ?? s.franchiseId}</span>
+                <span className={`text-xs ${s.isHuman ? "text-slate-300" : "italic text-slate-500"}`}>
+                  {s.name}
+                </span>
+                {mine && <span className="rounded bg-slate-700 px-1 text-[9px] font-black text-amber-300">YOU</span>}
+                {s.isHuman && (
+                  <span className={`ml-auto text-[10px] font-bold ${s.connected ? "text-emerald-400" : "text-red-400"}`}>
+                    {s.connected ? "● online" : "○ away"}
+                  </span>
+                )}
+                {f && <span className="ml-auto font-mono text-[10px] text-slate-500">{money(f.budget)}</span>}
+              </li>
+            );
+          })}
+        </ul>
+
+        {isHost ? (
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onStart}
+            className="mt-6 w-full rounded-xl bg-amber-500 py-3.5 text-lg font-black text-slate-950 hover:bg-amber-400"
+          >
+            Start Auction
+          </motion.button>
+        ) : (
+          <p className="mt-6 text-center text-sm text-slate-400">
+            Waiting for the host to start…
+          </p>
+        )}
+        <button onClick={onLeave} className="mt-2 w-full text-xs text-slate-500 hover:text-slate-300">
+          Leave room
+        </button>
+      </motion.div>
+    </div>
+  );
+}

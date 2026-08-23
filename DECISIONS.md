@@ -5,6 +5,37 @@ Newest first. Each entry: what, why, and what it rules out.
 
 ---
 
+## D-027 — Multiplayer: one Durable Object per room, separate from the Pages site
+**v2, 2026-08-21.** `worker/` holds an `AuctionRoom` DO deployed to
+`auctionroom-rooms.jayanthapalla.workers.dev`, addressed by `getByName(code)`
+so a 6-character room code routes deterministically to one object.
+
+**The DO is the only authority.** It imports the same `src/engine/` the browser
+uses — the purity rule from day one is what made this a lift rather than a
+rewrite. Clients send intents (`bid`, `pass`, `rtm_*`) and render whatever
+state comes back; they never run the reducer. `MultiplayerGame` swaps the
+store's `dispatch` for one that forwards to the socket, so every existing
+component (rail, HUD, 3D hall, results) works unchanged in online play.
+
+**Clock:** a DO alarm fires every 1s during bidding and drives `TICK`, plus one
+bot action per tick. Sold/unsold interstitials and RTM thinking time reschedule
+the alarm at different delays. A human sitting on an RTM decision is timed out
+after 15s and auto-declined — nobody can stall a room.
+
+**Seats:** bots fill all eight franchises up front; joining converts a bot seat
+to human. Disconnecting **holds** the seat rather than freeing it (the auction
+never pauses for anyone), and a `crypto.randomUUID()` token in sessionStorage
+reclaims it on reconnect.
+
+**Separate worker rather than migrating Pages to Workers static assets:**
+WebSocket upgrades don't trigger CORS preflight, so the two-origin split costs
+nothing, and it leaves the working Pages deploy untouched. Migrating to a
+single Workers deploy stays available later if the split ever becomes annoying.
+
+**Verified against production:** two clients get distinct seats, a non-host
+`start` is refused, a bid from one client appears in the other's view, a third
+joiner is seated, and the clock plus bots run server-side with zero errors.
+
 ## D-026 — Post-auction tournament decides the winner
 **v1, 2026-08-21.** The results screen used to declare a winner from Σ ratings
 plus balance bonuses — a number with no meaning attached. Now every squad plays
