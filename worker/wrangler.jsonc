@@ -3,6 +3,9 @@
   "name": "auctionroom-rooms",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-01",
+  // The Anthropic SDK pulls in Node built-ins; without this the commentary
+  // call throws at runtime instead of returning null.
+  "compatibility_flags": ["nodejs_compat"],
   "durable_objects": {
     "bindings": [{ "name": "ROOMS", "class_name": "AuctionRoom" }]
   },

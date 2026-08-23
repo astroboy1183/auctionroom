@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@react-three/fiber": "^9.7.0",
     "motion": "^13.1.1",
     "react": "^19.2.8",

@@ -42,6 +42,7 @@ export type ServerMessage =
   | { type: "chat"; entry: ChatEntry }
   | { type: "chat_history"; entries: ChatEntry[] }
   | { type: "react"; event: ReactionEvent }
+  | { type: "commentary"; text: string; at: number }
   | { type: "error"; message: string };
 
 /** Unambiguous room codes — no O/0/I/1. */

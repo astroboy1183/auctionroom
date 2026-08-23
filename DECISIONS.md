@@ -36,6 +36,37 @@ single Workers deploy stays available later if the split ever becomes annoying.
 `start` is refused, a bid from one client appears in the other's view, a third
 joiner is seated, and the clock plus bots run server-side with zero errors.
 
+## D-033 — LLM commentary on Haiku 4.5, dormant unless a key is set
+**v2, 2026-08-21.** The rooms worker can call Claude for one line of colour
+commentary at interesting moments — a big sale, an RTM steal, a new set, the
+final result.
+
+**Model: Haiku 4.5** (user's choice, and the right fit). The job is short
+reactive text, not reasoning. Measured shape: ~30 calls per auction, ~550
+input + ~45 output tokens each → **roughly $0.02 per full auction**, about a
+fifth of Sonnet and a fifth again of Opus.
+**Prompt caching is deliberately not used:** the minimum cacheable prefix is
+~1024 tokens and the system prompt is ~250, so it would not engage without
+padding — and most of each call is changing game state anyway.
+
+**Failure is always silent.** No key, cap reached, timeout (4s), API error,
+empty response — every path returns `null` and the auction proceeds exactly as
+if the file did not exist. Verified in production with no key set: 17 state
+broadcasts, 0 commentary, 0 errors.
+
+**Cost controls, because this runs on the owner's key behind a public URL:**
+40 calls per room, a relevance gate (sales ≥ ₹8 Cr or ≥ 8 bids only — never
+every lot), `maxRetries: 0`, and `waitUntil` so a slow call never delays the
+clock.
+
+**`nodejs_compat` is required** in `wrangler.jsonc`: the Anthropic SDK imports
+Node built-ins, and without the flag the call throws at runtime rather than
+returning null.
+
+**Not enabled yet** — `wrangler secret put ANTHROPIC_API_KEY` switches it on.
+A credential search across the user's other projects was blocked by the
+permission classifier and deliberately not worked around.
+
 ## D-032 — Accessibility, DOM portraits, mobile room polish
 **2026-08-21.** `prefers-reduced-motion` collapses every animation while
 leaving the game fully playable; a visible `:focus-visible` ring matters

@@ -4,6 +4,7 @@
 // Clients only send intents and render whatever state comes back.
 
 import { DurableObject } from "cloudflare:workers";
+import { comment, isWorthComment, type Moment } from "./commentary";
 import { applyEvent, ACCEL_SECONDS, LOT_SECONDS } from "../../src/engine/auction";
 import { createInitialState } from "../../src/engine/simulate";
 import { makeDefaultFranchises } from "../../src/engine/franchises";
@@ -32,6 +33,8 @@ const RTM_BOT_THINK_MS = 1200;
 
 export interface Env {
   ROOMS: DurableObjectNamespace<AuctionRoom>;
+  /** Optional. Unset = no commentary; the auction is otherwise identical. */
+  ANTHROPIC_API_KEY?: string;
 }
 
 interface Persisted {
@@ -43,6 +46,8 @@ interface Persisted {
   rng: Rng;
   rtmDeadline: number | null;
   chat: ChatEntry[];
+  /** Per-room commentary call count, for the cost cap. */
+  commentaryCalls: number;
 }
 
 /** Keep the backlog small: it ships with every join and lives in DO storage. */
@@ -88,6 +93,7 @@ export class AuctionRoom extends DurableObject<Env> {
       rng: seedRng(seed),
       rtmDeadline: null,
       chat: [],
+      commentaryCalls: 0,
     };
   }
 
@@ -283,11 +289,69 @@ export class AuctionRoom extends DurableObject<Env> {
     await this.ctx.storage.setAlarm(Date.now() + TICK_MS);
   }
 
+  /**
+   * Kick off a commentary call without awaiting it — the auction clock must
+   * never wait on an API round-trip. waitUntil keeps the DO alive for it.
+   */
+  private fireCommentary(m: Moment): void {
+    if (!this.env.ANTHROPIC_API_KEY || !isWorthComment(m)) return;
+    const snapshot = this.state.auction;
+    this.state.commentaryCalls++;
+    const calls = this.state.commentaryCalls;
+    this.ctx.waitUntil(
+      comment(m, snapshot, { apiKey: this.env.ANTHROPIC_API_KEY, callsSoFar: calls - 1 })
+        .then((text) => {
+          if (text) this.broadcast({ type: "commentary", text, at: Date.now() });
+        })
+        .catch(() => { /* commentary is never worth a thrown error */ }),
+    );
+  }
+
+  /** Interesting transitions worth a line from the commentator. */
+  private momentFor(before: AuctionState, after: AuctionState): Moment | null {
+    const byId = (id: string | null) => after.franchises.find((f) => f.id === id);
+    if (after.phase === "sold" && before.phase !== "sold" && after.currentPlayer) {
+      const buyer = byId(after.currentBidderId);
+      if (!buyer) return null;
+      return {
+        kind: "sold",
+        player: after.currentPlayer.name,
+        buyer,
+        price: after.currentBid ?? 0,
+        contested: after.bidHistory.filter((b) => b.playerId === after.currentPlayer!.id).length,
+      };
+    }
+    if (after.phase === "rtm" && before.phase !== "rtm" && after.rtmOffer && after.currentPlayer) {
+      const former = byId(after.rtmOffer.formerFranchiseId);
+      const winner = byId(after.rtmOffer.winningFranchiseId);
+      if (!former || !winner) return null;
+      return { kind: "rtm", player: after.currentPlayer.name, former, winner, price: after.rtmOffer.amount };
+    }
+    if (after.phase === "finished" && before.phase !== "finished") {
+      const champion = [...after.franchises].sort(
+        (a, b) => b.squad.reduce((n, p) => n + p.rating, 0) - a.squad.reduce((n, p) => n + p.rating, 0),
+      )[0];
+      return { kind: "finished", champion };
+    }
+    if (
+      after.phase === "bidding" &&
+      after.currentPlayer &&
+      before.currentPlayer &&
+      after.currentPlayer.setId !== before.currentPlayer.setId
+    ) {
+      const set = after.sets.find((s) => s.id === after.currentPlayer!.setId);
+      if (set) return { kind: "set", setName: set.name };
+    }
+    return null;
+  }
+
   private async dispatch(event: Parameters<typeof applyEvent>[1]): Promise<void> {
     const before = this.state.auction;
     const after = applyEvent(before, event);
     if (after === before) return; // rejected by the engine; nothing to say
     this.state.auction = after;
+    const moment = this.momentFor(before, after);
+    if (moment) this.fireCommentary(moment);
     if (after.phase === "rtm" && before.phase !== "rtm") {
       this.state.rtmDeadline = Date.now() + RTM_HUMAN_TIMEOUT_MS;
     }
@@ -314,6 +378,7 @@ export class AuctionRoom extends DurableObject<Env> {
   async alarm(): Promise<void> {
     await this.ready;
     const a = this.state.auction;
+    const before = a;
 
     switch (a.phase) {
       case "bidding": {
@@ -375,6 +440,9 @@ export class AuctionRoom extends DurableObject<Env> {
       default:
         return;
     }
+
+    const moment = this.momentFor(before, this.state.auction);
+    if (moment) this.fireCommentary(moment);
 
     await this.persist();
     this.broadcastState();

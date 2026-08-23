@@ -20,6 +20,8 @@ export interface RoomConnection {
   spectators: number;
   chat: ChatEntry[];
   reactions: ReactionEvent[];
+  /** Latest line from the LLM commentator, or null when unavailable. */
+  commentary: { text: string; at: number } | null;
   error: string | null;
   send: (msg: ClientMessage) => void;
 }
@@ -45,6 +47,7 @@ export function useRoom(code: string | null, name: string, spectate = false): Ro
   const [spectators, setSpectators] = useState(0);
   const [chat, setChat] = useState<ChatEntry[]>([]);
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
+  const [commentary, setCommentary] = useState<{ text: string; at: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -86,6 +89,8 @@ export function useRoom(code: string | null, name: string, spectate = false): Ro
         // Reactions are transient: they float up and expire.
         setReactions((r) => [...r, msg.event].slice(-12));
         setTimeout(() => setReactions((r) => r.filter((x) => x !== msg.event)), 2600);
+      } else if (msg.type === "commentary") {
+        setCommentary({ text: msg.text, at: msg.at });
       } else if (msg.type === "error") {
         setError(msg.message);
       }
@@ -105,5 +110,8 @@ export function useRoom(code: string | null, name: string, spectate = false): Ro
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
   }, []);
 
-  return { status, auction, seats, franchiseId, isHost, spectating, spectators, chat, reactions, error, send };
+  return {
+    status, auction, seats, franchiseId, isHost, spectating, spectators,
+    chat, reactions, commentary, error, send,
+  };
 }

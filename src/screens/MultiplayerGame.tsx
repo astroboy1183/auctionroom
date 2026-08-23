@@ -9,6 +9,7 @@ import RoomLobby from "./RoomLobby";
 import AuctionFloor from "./AuctionFloor";
 import Results from "./Results";
 import RoomChat from "../components/RoomChat";
+import CommentaryBar from "../components/CommentaryBar";
 
 interface Props {
   roomCode: string;
@@ -99,6 +100,10 @@ export default function MultiplayerGame({ roomCode, name, spectate, onLeave }: P
         </div>
       )}
       {room.auction.phase === "finished" ? <Results /> : <AuctionFloor />}
+
+      <div className="pointer-events-none fixed inset-x-0 top-14 z-30 px-3">
+        <CommentaryBar commentary={room.commentary} />
+      </div>
 
       <div className="fixed bottom-3 left-3 z-40 sm:bottom-auto sm:left-auto sm:right-3 sm:top-[22rem]">
         <RoomChat
